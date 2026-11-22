@@ -1,0 +1,3848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naveen S — Systems Engineer · Industrial Automation · Deep Space & Cosmic Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<!-- Three.js for 3D generative backgrounds and objects -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS — RAW BRUTALIST & EDITORIAL LUXURY
+   Aesthetics: Monospaced Engineering + Swiss Editorial + Cyberpunk Acid Lime
+============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --lime:       #d4ff00;
+  --lime-dim:   rgba(212, 255, 0, 0.12);
+  --lime-glow:  rgba(212, 255, 0, 0.35);
+  --cyan:       #00f0ff;
+  --cyan-dim:   rgba(0, 240, 255, 0.15);
+  --cyan-glow:  rgba(0, 240, 255, 0.4);
+  --crimson:    #ff3344;
+  --supernova:  #ff8800;
+  --cream:      #ede8db;
+  --bg:         #040407;
+  --bg2:        #0a0a10;
+  --bg3:        #12121b;
+  --muted:      #656578;
+  --muted-light:#9898ab;
+  --border:     #1e1e2c;
+  --border-bright: #36364d;
+  --white:      #f6f7fb;
+
+  --ff-head: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ff-serif:'DM Serif Display', Georgia, serif;
+  --ff-body: 'DM Sans', -apple-system, sans-serif;
+  --ff-mono: 'JetBrains Mono', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--ff-body);
+  background: var(--bg);
+  color: var(--white);
+  overflow-x: hidden;
+  cursor: none;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   CANVAS BACKGROUND LAYERS (CINEMATIC 3D GENERATIVE FLOW)
+============================================================ */
+#webgl-bg {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 1s ease;
+}
+
+/* Micro grain noise texture */
+.noise-overlay {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none;
+  opacity: .032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   CUSTOM INTERACTIVE CURSOR
+============================================================ */
+.cursor-dot {
+  position: fixed; top:0; left:0; z-index: 100000;
+  width: 8px; height: 8px;
+  background: var(--lime);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: exclusion;
+  transition: width .2s, height .2s, background-color .2s;
+}
+.cursor-follower {
+  position: fixed; top:0; left:0; z-index: 99999;
+  width: 40px; height: 40px;
+  border: 1px solid rgba(212, 255, 0, 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: width .3s cubic-bezier(.16,1,.3,1), height .3s cubic-bezier(.16,1,.3,1), border-color .3s, background-color .3s;
+  mix-blend-mode: exclusion;
+}
+body.hovered .cursor-dot { width: 14px; height: 14px; background: var(--white); }
+body.hovered .cursor-follower {
+  width: 65px; height: 65px;
+  border-color: var(--lime);
+  background: rgba(212, 255, 0, 0.1);
+}
+
+/* Scroll progress indicator */
+#top-progress {
+  position: fixed; top:0; left:0; height:3px;
+  background: linear-gradient(90deg, var(--lime), var(--crimson));
+  z-index: 9999; width: 0%;
+  box-shadow: 0 0 10px var(--lime);
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index: 1000;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 3.5rem;
+  transition: background .4s, border-color .4s, backdrop-filter .4s;
+}
+nav.scrolled {
+  background: rgba(9, 9, 11, 0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand {
+  display: flex; align-items: center; gap: .75rem;
+  text-decoration: none; color: var(--white);
+}
+.nav-badge-pill {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 12px var(--lime);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+}
+.nav-title {
+  font-family: var(--ff-head);
+  font-weight: 800; font-size: 1.15rem;
+  letter-spacing: -.03em;
+}
+.nav-title span { color: var(--lime); }
+.nav-links {
+  display: flex; gap: 2.5rem; list-style: none;
+}
+.nav-links a {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  color: var(--muted-light);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  position: relative;
+  transition: color .25s;
+}
+.nav-links a::after {
+  content: ''; position: absolute;
+  bottom: -4px; left: 0; width: 0; height: 1px;
+  background: var(--lime);
+  transition: width .3s;
+}
+.nav-links a:hover { color: var(--lime); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-actions {
+  display: flex; align-items: center; gap: 1rem;
+}
+.audio-btn, .term-toggle-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--muted-light);
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  padding: .5rem .9rem;
+  border-radius: 3px;
+  cursor: none;
+  display: flex; align-items: center; gap: .5rem;
+  transition: all .25s;
+}
+.audio-btn:hover, .term-toggle-btn:hover {
+  border-color: var(--lime); color: var(--lime);
+  background: var(--bg3);
+}
+.nav-hire-cta {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .55rem 1.4rem;
+  background: var(--lime);
+  color: var(--bg);
+  text-decoration: none;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: transform .25s, box-shadow .25s, background-color .25s;
+}
+.nav-hire-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px var(--lime-glow);
+  background: var(--white);
+}
+
+/* ============================================================
+   TICKER TAPE (REAL TIME TELEMETRY)
+============================================================ */
+.telemetry-ticker {
+  position: fixed; top: 68px; left:0; right:0; z-index: 900;
+  background: #111116;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  height: 32px;
+  display: flex; align-items: center;
+}
+.ticker-content {
+  display: flex;
+  animation: scroll-ticker 28s linear infinite;
+  white-space: nowrap;
+}
+.ticker-content span {
+  font-family: var(--ff-mono);
+  font-size: .65rem;
+  color: var(--cream);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  padding: 0 1.75rem;
+  display: inline-flex; align-items: center; gap: .6rem;
+}
+.ticker-content .hi { color: var(--lime); font-weight: 700; }
+.ticker-content .sep { color: var(--muted); opacity: 0.6; }
+@keyframes scroll-ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ============================================================
+   HERO SECTION — HIGH DENSITY INTERACTIVE STAGE
+============================================================ */
+#hero {
+  position: relative;
+  z-index: 10;
+  min-height: 94vh;
+  padding: 8.5rem 3.5rem 3.5rem;
+  display: grid;
+  grid-template-columns: minmax(440px, 1fr) minmax(480px, 1.25fr);
+  gap: 3rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 1100px) {
+  #hero {
+    grid-template-columns: 1fr;
+    padding: 7rem 1.75rem 3rem;
+    gap: 2.5rem;
+  }
+}
+
+.hero-content-col {
+  max-width: 560px;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-coords {
+  font-family: var(--ff-mono);
+  font-size: .64rem;
+  color: var(--cyan);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin-bottom: 1.15rem;
+  display: flex; align-items: center; gap: .75rem;
+}
+.hero-coords::before {
+  content: ''; width: 22px; height: 1px; background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.hero-headline {
+  font-family: var(--ff-head);
+  font-size: clamp(2.2rem, 3.8vw, 3.9rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+  margin-bottom: 1.25rem;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.hero-headline .italic-serif {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--lime);
+  display: inline-block;
+  letter-spacing: -.02em;
+}
+
+.hero-subtitle-box {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+.hero-role-chip {
+  background: var(--lime);
+  color: #000;
+  font-family: var(--ff-mono);
+  font-size: .66rem;
+  font-weight: 700;
+  padding: .35rem .85rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+.hero-academic-chip {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  color: var(--muted-light);
+}
+.hero-academic-chip strong { color: var(--white); }
+
+.hero-narrative {
+  font-size: 1.02rem;
+  line-height: 1.68;
+  color: var(--cream);
+  font-weight: 300;
+  margin-bottom: 2rem;
+  max-width: 520px;
+}
+.hero-narrative strong {
+  font-weight: 600;
+  color: var(--white);
+}
+
+.hero-action-group {
+  display: flex; gap: 1rem; align-items: center;
+  margin-bottom: 2.75rem;
+  flex-wrap: wrap;
+}
+.btn-primary-action {
+  background: var(--lime);
+  color: var(--bg);
+  font-family: var(--ff-mono);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .95rem 1.75rem;
+  border-radius: 2px;
+  display: inline-flex; align-items: center; gap: .75rem;
+  text-decoration: none;
+  transition: all .25s ease;
+  box-shadow: 0 4px 20px rgba(212, 255, 0, 0.25);
+  cursor: pointer;
+}
+.btn-primary-action:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(212, 255, 0, 0.45);
+}
+.btn-secondary-action {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid var(--border-bright);
+  font-family: var(--ff-mono);
+  font-size: .76rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .95rem 1.75rem;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: all .25s ease;
+  cursor: pointer;
+}
+.btn-secondary-action:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+.hero-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+  max-width: 520px;
+}
+.kpi-cell { display: flex; flex-direction: column; gap: .25rem; }
+.kpi-val {
+  font-family: var(--ff-head);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1;
+}
+.kpi-label {
+  font-family: var(--ff-mono);
+  font-size: .62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+/* OBSERVATORY VIEWPORT & 3D HUD FRAME */
+.hero-3d-stage {
+  position: relative;
+  width: 100%;
+  height: 580px;
+  background: radial-gradient(circle at 60% 40%, rgba(10, 22, 48, 0.45) 0%, rgba(4, 5, 10, 0.8) 80%);
+  border: 1px solid rgba(0, 240, 255, 0.22);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), inset 0 0 60px rgba(0, 240, 255, 0.04);
+}
+
+#three-hero-canvas {
+  position: absolute; top:0; left:0; width:100%; height:100%;
+  cursor: grab;
+}
+#three-hero-canvas:active { cursor: grabbing; }
+
+/* Observatory HUD Top Bar */
+.sculpture-controls-bar {
+  position: relative; z-index: 10;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .85rem 1.25rem;
+  background: rgba(6, 8, 14, 0.85);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.18);
+  flex-wrap: wrap; gap: .6rem;
+}
+.sculpture-status {
+  font-family: var(--ff-mono);
+  font-size: .64rem;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  display: flex; align-items: center; gap: .6rem;
+}
+.sculpture-status::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+  animation: pulseBeacon 2s infinite ease-in-out;
+}
+@keyframes pulseBeacon {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 14px var(--cyan); }
+}
+
+.sculpture-presets {
+  display: flex; gap: .4rem; align-items: center;
+}
+.sculpture-preset-btn {
+  background: rgba(18, 24, 38, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  color: var(--muted-light);
+  font-family: var(--ff-mono);
+  font-size: .59rem;
+  padding: .3rem .65rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all .2s;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.sculpture-preset-btn:hover, .sculpture-preset-btn.active {
+  background: var(--cyan);
+  color: #000;
+  border-color: var(--cyan);
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.45);
+}
+
+/* On-Canvas Telemetry HUD Overlays */
+.stage-hud-overlay {
+  position: absolute;
+  top: 4.2rem;
+  left: 1.25rem;
+  z-index: 8;
+  pointer-events: none;
+  font-family: var(--ff-mono);
+  font-size: .58rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex; flex-direction: column; gap: .35rem;
+  letter-spacing: .08em;
+  background: rgba(4, 6, 12, 0.55);
+  padding: .5rem .75rem;
+  border-radius: 3px;
+  border-left: 2px solid var(--cyan);
+}
+.stage-hud-overlay span strong {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.stage-hud-hint {
+  position: absolute;
+  top: 4.2rem;
+  right: 1.25rem;
+  z-index: 8;
+  pointer-events: none;
+  font-family: var(--ff-mono);
+  font-size: .55rem;
+  color: var(--muted-light);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  background: rgba(4, 6, 12, 0.55);
+  padding: .35rem .65rem;
+  border-radius: 3px;
+}
+
+/* Observatory Footer Status */
+.sculpture-footer-info {
+  position: relative; z-index: 10;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .7rem 1.25rem;
+  background: rgba(6, 8, 14, 0.85);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+  font-family: var(--ff-mono);
+  font-size: .59rem;
+  color: var(--muted-light);
+  letter-spacing: .08em;
+  flex-wrap: wrap; gap: .5rem;
+}
+.sculpture-pulse-tag {
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all .2s;
+}
+.sculpture-pulse-tag:hover {
+  color: #fff;
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+/* ============================================================
+   3D HERO INTERACTIVE SCULPTURE CANVASES
+============================================================ */
+.hero-3d-stage {
+  position: relative;
+  width: 100%;
+  height: 540px;
+  background: radial-gradient(circle at center, rgba(12, 18, 36, 0.5) 0%, rgba(4, 4, 7, 0.2) 75%);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(0, 240, 255, 0.03);
+}
+#three-hero-canvas {
+  position: absolute; top:0; left:0; width:100%; height:100%;
+  cursor: grab;
+}
+#three-hero-canvas:active { cursor: grabbing; }
+
+.sculpture-controls-bar {
+  position: relative; z-index: 10;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .75rem 1.1rem;
+  background: rgba(17, 17, 21, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; gap: .5rem;
+}
+.sculpture-status {
+  font-family: var(--ff-mono);
+  font-size: .62rem;
+  color: var(--lime);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  display: flex; align-items: center; gap: .5rem;
+}
+.sculpture-status::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+}
+.sculpture-presets {
+  display: flex; gap: .35rem; align-items: center;
+}
+.sculpture-preset-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--muted-light);
+  font-family: var(--ff-mono);
+  font-size: .58rem;
+  padding: .2rem .55rem;
+  border-radius: 2px;
+  cursor: none;
+  transition: all .2s;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.sculpture-preset-btn:hover, .sculpture-preset-btn.active {
+  background: var(--lime);
+  color: var(--bg);
+  border-color: var(--lime);
+  font-weight: 700;
+}
+
+.sculpture-footer-info {
+  position: relative; z-index: 10;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .75rem 1.2rem;
+  background: rgba(17, 17, 21, 0.85);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  font-family: var(--ff-mono);
+  font-size: .62rem;
+  color: var(--muted-light);
+}
+
+/* ============================================================
+   SHARED SECTION WRAPPERS & EDITORIAL TITLES
+============================================================ */
+.section-wrapper {
+  position: relative;
+  z-index: 10;
+  padding: 8rem 3.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.section-tagline {
+  display: inline-flex; align-items: center; gap: .75rem;
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  margin-bottom: 1.5rem;
+}
+.section-tagline::before {
+  content: attr(data-index);
+  color: var(--lime);
+  border: 1px solid var(--lime);
+  width: 24px; height: 24px;
+  display: inline-grid; place-items: center;
+  font-size: .62rem;
+}
+.section-heading-big {
+  font-family: var(--ff-head);
+  font-size: clamp(2.8rem, 5.5vw, 5.2rem);
+  font-weight: 800;
+  line-height: .94;
+  letter-spacing: -.04em;
+  margin-bottom: 1rem;
+}
+.section-heading-big .serif-accent {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--lime);
+}
+.section-heading-big .outline-word {
+  -webkit-text-stroke: 1.5px var(--white);
+  color: transparent;
+}
+
+/* ============================================================
+   SECTION: ABOUT DEEP-DIVE & ARCHITECTURE
+============================================================ */
+.about-triptych {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  margin-top: 4.5rem;
+}
+.triptych-column {
+  padding: 3rem 2.5rem;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+}
+.triptych-column:last-child { border-right: none; }
+.column-tag {
+  font-family: var(--ff-mono);
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: var(--muted);
+  padding-bottom: .8rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.column-body-text {
+  font-size: .95rem;
+  line-height: 1.8;
+  color: #9f9fad;
+  font-weight: 300;
+  margin-bottom: 1.25rem;
+}
+.column-body-text strong { color: var(--white); font-weight: 500; }
+.column-quote {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  font-size: 1.35rem;
+  line-height: 1.5;
+  color: var(--cream);
+  border-left: 2px solid var(--lime);
+  padding-left: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.fact-sheet-list { list-style: none; }
+.fact-sheet-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .8rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .88rem;
+}
+.fact-sheet-list li:last-child { border-bottom: none; }
+.fact-key {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.fact-val { font-weight: 500; color: var(--white); }
+
+/* ============================================================
+   3D FLOATING PERSPECTIVE CARDS (SPECULAR LIGHT HOVER)
+============================================================ */
+.perspective-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.75rem;
+  margin-top: 4rem;
+  perspective: 1200px;
+}
+.tilt-3d-card {
+  position: relative;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2.5rem 2.2rem;
+  transition: transform .15s ease-out, border-color .3s, box-shadow .3s;
+  transform-style: preserve-3d;
+  cursor: none;
+  overflow: hidden;
+}
+.tilt-3d-card::before {
+  content: '';
+  position: absolute;
+  top: var(--mouse-y, -200px); left: var(--mouse-x, -200px);
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(212, 255, 0, 0.12) 0%, transparent 65%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.tilt-3d-card:hover::before { opacity: 1; }
+.tilt-3d-card:hover {
+  border-color: rgba(212, 255, 0, 0.4);
+  box-shadow: 0 15px 45px rgba(0,0,0,0.6), 0 0 25px rgba(212, 255, 0, 0.1);
+}
+
+.card-num-watermark {
+  font-family: var(--ff-mono);
+  font-size: .7rem;
+  color: var(--lime);
+  font-weight: 700;
+  letter-spacing: .1em;
+  margin-bottom: 1.2rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-inspect-hint {
+  font-size: .62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+.card-title-lg {
+  font-family: var(--ff-head);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  margin-bottom: .85rem;
+  line-height: 1.15;
+}
+.card-summary-p {
+  font-size: .92rem;
+  line-height: 1.7;
+  color: #9e9ea8;
+  font-weight: 300;
+  margin-bottom: 1.5rem;
+}
+.card-summary-p .stat-highlight {
+  color: var(--white);
+  font-weight: 600;
+  background: rgba(212, 255, 0, 0.1);
+  padding: .1rem .4rem;
+  border-radius: 2px;
+}
+
+.card-stack-row {
+  display: flex; flex-wrap: wrap; gap: .45rem;
+  margin-bottom: 1.75rem;
+}
+.stack-pill {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  padding: .25rem .65rem;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--cream);
+  letter-spacing: .04em;
+}
+
+.card-action-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.card-metric-badge {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  font-weight: 700;
+  padding: .35rem .8rem;
+  background: var(--lime);
+  color: var(--bg);
+}
+.card-click-trigger {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  color: var(--muted-light);
+  display: flex; align-items: center; gap: .4rem;
+  transition: color .25s, transform .25s;
+}
+.tilt-3d-card:hover .card-click-trigger {
+  color: var(--lime);
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   INTERACTIVE PROJECT INSPECT DRAWER / MODAL
+============================================================ */
+#project-drawer {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(25px);
+  display: none;
+  place-items: center;
+  padding: 2rem;
+}
+#project-drawer.active { display: grid; }
+.drawer-window {
+  width: 100%; max-width: 900px;
+  background: var(--bg2);
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 50px rgba(212, 255, 0, 0.15);
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  border-radius: 4px;
+}
+.drawer-header {
+  position: sticky; top:0; z-index: 20;
+  background: var(--bg3);
+  padding: 1.25rem 2rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-title-meta {
+  font-family: var(--ff-mono);
+  font-size: .7rem;
+  color: var(--lime);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+}
+.drawer-close-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: var(--ff-mono);
+  font-size: .75rem;
+  padding: .4rem .9rem;
+  cursor: none;
+  transition: all .25s;
+}
+.drawer-close-btn:hover {
+  background: var(--crimson); border-color: var(--crimson);
+}
+.drawer-content-body {
+  padding: 2.5rem;
+}
+.drawer-h1 {
+  font-family: var(--ff-head);
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: .5rem;
+}
+.drawer-lead {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #a4a4b2;
+  margin-bottom: 2rem;
+}
+.drawer-section-h2 {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  color: var(--lime);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  margin: 2rem 0 .75rem;
+  display: flex; align-items: center; gap: .6rem;
+}
+.drawer-section-h2::before {
+  content: '■'; font-size: .6rem;
+}
+.drawer-spec-table {
+  width: 100%; border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+.drawer-spec-table th, .drawer-spec-table td {
+  padding: .85rem 1rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  font-size: .88rem;
+}
+.drawer-spec-table th {
+  background: var(--bg3);
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  color: var(--muted-light);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.code-preview-box {
+  background: #050508;
+  border: 1px solid var(--border);
+  padding: 1.25rem;
+  font-family: var(--ff-mono);
+  font-size: .8rem;
+  color: #c9c9d4;
+  line-height: 1.6;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+/* ============================================================
+   SECTION: SKILLS MATRIX & PROFICIENCY
+============================================================ */
+.skills-master-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 4rem;
+  margin-top: 4rem;
+}
+.skills-sidebar-sticky {
+  position: sticky; top: 8rem;
+  align-self: start;
+}
+.matrix-menu { list-style: none; }
+.matrix-menu-item {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+  cursor: none;
+  transition: all .25s;
+}
+.matrix-menu-item.active .matrix-num {
+  background: var(--lime); color: var(--bg); border-color: var(--lime);
+}
+.matrix-menu-item.active .matrix-label { color: var(--white); }
+.matrix-num {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  width: 28px; height: 28px;
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  color: var(--muted);
+  transition: all .25s;
+}
+.matrix-label {
+  font-family: var(--ff-head);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  transition: color .25s;
+}
+
+.skills-panel-group { }
+.skill-card-block {
+  padding: 2.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  margin-bottom: 2rem;
+  transition: border-color .3s;
+}
+.skill-card-block:hover { border-color: var(--border-bright); }
+.skill-card-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.skill-card-heading {
+  font-family: var(--ff-head);
+  font-size: 1.35rem; font-weight: 800;
+}
+.skill-card-meta {
+  font-family: var(--ff-mono);
+  font-size: .65rem; color: var(--muted);
+}
+
+.skill-prog-row {
+  display: grid; grid-template-columns: 180px 1fr 50px;
+  align-items: center; gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.prog-title {
+  font-family: var(--ff-mono);
+  font-size: .8rem;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.prog-rail {
+  height: 4px;
+  background: var(--bg3);
+  position: relative;
+  border: 1px solid var(--border);
+}
+.prog-fill-inner {
+  height: 100%;
+  background: var(--lime);
+  width: 0%;
+  transition: width 1.8s cubic-bezier(.16,1,.3,1);
+  position: relative;
+}
+.prog-fill-inner::after {
+  content: ''; position: absolute; right: -2px; top: -3px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
+}
+.prog-number {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  color: var(--muted-light);
+  text-align: right;
+}
+
+/* ============================================================
+   SECTION: INDUSTRIAL EXPERIENCE (STARLIT STEEL)
+============================================================ */
+.starlit-featured-case {
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  margin-top: 4.5rem;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+}
+.case-left-pane {
+  padding: 3.5rem;
+  border-right: 1px solid var(--border);
+}
+.case-tag {
+  font-family: var(--ff-mono);
+  font-size: .65rem;
+  color: var(--crimson);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  margin-bottom: 1.2rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.case-tag::before { content: '★'; }
+.case-title {
+  font-family: var(--ff-head);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+}
+.case-title span { color: var(--lime); }
+.case-narrative-p {
+  font-size: .98rem;
+  line-height: 1.8;
+  color: #a4a4b2;
+  margin-bottom: 2rem;
+}
+
+.case-grid-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  background: var(--border);
+  gap: 1px;
+}
+.case-metric-box {
+  background: var(--bg);
+  padding: 1.6rem;
+}
+.c-metric-num {
+  font-family: var(--ff-head);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--lime);
+  letter-spacing: -.04em;
+}
+.c-metric-label {
+  font-family: var(--ff-mono);
+  font-size: .62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-top: .3rem;
+}
+
+.case-right-pane {
+  padding: 3.5rem;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+}
+.case-deliverables-list { list-style: none; }
+.case-deliverables-list li {
+  display: flex; gap: 1rem;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .9rem;
+  line-height: 1.6;
+  color: #a4a4b2;
+}
+.case-deliverables-list li:first-child { padding-top: 0; }
+.case-deliverables-list li:last-child { border-bottom: none; }
+.case-deliverables-list li::before {
+  content: '→'; color: var(--lime); font-size: 1rem;
+  flex-shrink: 0;
+}
+.case-deliverables-list li strong { color: var(--white); font-weight: 500; }
+
+/* ============================================================
+   SECTION: ACADEMICS & CERTIFICATIONS
+============================================================ */
+.academic-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--border);
+  background: var(--border);
+  gap: 1px;
+  margin-top: 4.5rem;
+}
+.academic-card {
+  background: var(--bg2);
+  padding: 2.8rem 2.2rem;
+  transition: background .3s;
+}
+.academic-card:hover { background: var(--bg3); }
+.academic-topbar {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 2rem;
+}
+.academic-grade-badge {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .35rem .85rem;
+  background: var(--lime);
+  color: var(--bg);
+}
+.academic-grade-badge.outline {
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--cream);
+}
+.academic-degree-name {
+  font-family: var(--ff-head);
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: .6rem;
+  line-height: 1.25;
+}
+.academic-institution {
+  font-family: var(--ff-mono);
+  font-size: .75rem;
+  color: var(--lime);
+  text-transform: uppercase;
+  margin-bottom: .4rem;
+}
+.academic-tenure {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.academic-detail-p {
+  font-size: .88rem;
+  line-height: 1.65;
+  color: #9292a0;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+/* Certifications Dual Pane */
+.certs-double-pane {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  background: var(--border);
+  gap: 1px;
+  margin-top: 2rem;
+}
+.cert-half {
+  background: var(--bg2);
+  padding: 3rem;
+}
+.cert-half-heading {
+  font-family: var(--ff-head);
+  font-size: 1.35rem; font-weight: 800;
+  margin-bottom: 1.75rem;
+}
+.credential-items-list { list-style: none; }
+.credential-items-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .9rem;
+  color: #a4a4b2;
+}
+.credential-items-list li:last-child { border-bottom: none; }
+.credential-items-list strong { color: var(--white); font-weight: 600; }
+.cred-bullet-icon {
+  width: 32px; height: 32px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-family: var(--ff-mono);
+  font-size: .75rem;
+  color: var(--lime);
+}
+
+/* ============================================================
+   FLOATING INTERACTIVE TERMINAL HUD
+============================================================ */
+#terminal-hud {
+  position: fixed;
+  bottom: 2rem; right: 2rem; z-index: 99998;
+  width: 440px;
+  background: rgba(12, 12, 16, 0.95);
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 30px rgba(212, 255, 0, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  display: none;
+  backdrop-filter: blur(20px);
+}
+#terminal-hud.open { display: block; }
+.term-bar {
+  background: var(--bg3);
+  padding: .6rem 1rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.term-bar-title {
+  font-family: var(--ff-mono);
+  font-size: .65rem;
+  color: var(--lime);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+.term-close-x {
+  background: none; border: none;
+  color: var(--muted); cursor: none;
+  font-size: .9rem;
+}
+.term-close-x:hover { color: var(--crimson); }
+.term-screen {
+  padding: 1.25rem;
+  height: 250px;
+  overflow-y: auto;
+  font-family: var(--ff-mono);
+  font-size: .75rem;
+  color: #d1d1dc;
+  line-height: 1.6;
+}
+.term-input-row {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem 1rem;
+  border-top: 1px solid var(--border);
+  background: #09090c;
+}
+.term-prompt-char { color: var(--lime); font-family: var(--ff-mono); font-size: .8rem; }
+#term-input {
+  background: transparent; border: none; outline: none;
+  color: var(--white); font-family: var(--ff-mono); font-size: .75rem;
+  width: 100%;
+}
+
+/* ============================================================
+   SECTION: CONTACT & INVITATION
+============================================================ */
+.contact-dual-stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: start;
+}
+.contact-giant-text {
+  font-family: var(--ff-head);
+  font-size: clamp(3.2rem, 6.5vw, 6rem);
+  font-weight: 800;
+  line-height: .92;
+  letter-spacing: -.05em;
+  margin-bottom: 2rem;
+}
+.contact-giant-text .italic-accent {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--lime);
+  display: block;
+}
+.contact-comms-list { list-style: none; margin-top: 2.5rem; }
+.contact-comms-list li {
+  border-bottom: 1px solid var(--border);
+}
+.comm-anchor {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.25rem 0;
+  text-decoration: none; color: var(--muted-light);
+  transition: all .25s; cursor: none;
+}
+.comm-anchor:hover { color: var(--white); }
+.comm-anchor:hover .comm-arrow { transform: translate(4px, -4px); color: var(--lime); }
+.comm-identity {
+  font-family: var(--ff-mono); font-size: .75rem;
+  text-transform: uppercase; letter-spacing: .1em;
+  display: flex; align-items: center; gap: .8rem;
+}
+.comm-endpoint {
+  font-family: var(--ff-mono); font-size: .8rem;
+  color: var(--cream); opacity: 0.65;
+}
+.comm-anchor:hover .comm-endpoint { opacity: 1; }
+.comm-arrow { transition: transform .25s, color .25s; font-size: 1.1rem; }
+
+.interactive-message-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 2.5rem;
+}
+.msg-field {
+  display: flex; flex-direction: column; gap: .5rem;
+  margin-bottom: 1.5rem;
+}
+.msg-label {
+  font-family: var(--ff-mono);
+  font-size: .62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+}
+.msg-input, .msg-textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: .9rem 1.1rem;
+  font-family: var(--ff-body);
+  font-size: .92rem;
+  outline: none;
+  transition: border-color .25s;
+}
+.msg-input:focus, .msg-textarea:focus { border-color: var(--lime); }
+.msg-textarea { min-height: 120px; resize: vertical; }
+
+.btn-submit-message {
+  width: 100%;
+  padding: 1.1rem 2rem;
+  background: var(--lime);
+  color: var(--bg);
+  border: none;
+  font-family: var(--ff-mono);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  cursor: none;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: background-color .25s, transform .25s;
+}
+.btn-submit-message:hover {
+  background: var(--white);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer {
+  position: relative; z-index: 10;
+  padding: 2.5rem 3.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.footer-left-brand {
+  font-family: var(--ff-head);
+  font-size: 1rem; font-weight: 800;
+}
+.footer-left-brand span { color: var(--lime); }
+.footer-status-pill {
+  font-family: var(--ff-mono);
+  font-size: .62rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .12em;
+}
+.footer-links-row {
+  display: flex; gap: 2rem; list-style: none;
+}
+.footer-links-row a {
+  font-family: var(--ff-mono);
+  font-size: .65rem; color: var(--muted);
+  text-decoration: none; text-transform: uppercase;
+  letter-spacing: .1em; transition: color .25s;
+}
+.footer-links-row a:hover { color: var(--lime); }
+
+/* ============================================================
+   RESPONSIVE DESIGN BREAKPOINTS
+============================================================ */
+@media (max-width: 1024px) {
+  #hero { grid-template-columns: 1fr; padding-top: 8rem; }
+  .hero-3d-stage { height: 400px; }
+  .about-triptych { grid-template-columns: 1fr; }
+  .triptych-column { border-right: none; border-bottom: 1px solid var(--border); }
+  .skills-master-layout { grid-template-columns: 1fr; }
+  .skills-sidebar-sticky { position: static; }
+  .starlit-featured-case { grid-template-columns: 1fr; }
+  .case-left-pane { border-right: none; border-bottom: 1px solid var(--border); }
+  .academic-cards-grid { grid-template-columns: 1fr; }
+  .certs-double-pane { grid-template-columns: 1fr; }
+  .contact-dual-stage { grid-template-columns: 1fr; }
+  nav { padding: 1rem 1.5rem; }
+  .nav-links { display: none; }
+  .section-wrapper { padding: 5rem 1.5rem; }
+  #terminal-hud { width: calc(100vw - 2rem); right: 1rem; bottom: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor Elements -->
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-follower" id="cursor-follower"></div>
+
+<!-- Top Scroll Progress Rail -->
+<div id="top-progress"></div>
+
+<!-- Cinematic Background 3D Shader Canvas -->
+<canvas id="webgl-bg"></canvas>
+<div class="noise-overlay"></div>
+
+<!-- ============================================================
+     PRIMARY NAVIGATION
+============================================================ -->
+<nav id="navbar">
+  <a href="#hero" class="nav-brand">
+    <div class="nav-badge-pill"></div>
+    <div class="nav-title">NAVEEN<span>.S</span></div>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#about">01 // Story</a></li>
+    <li><a href="#projects">02 // Works</a></li>
+    <li><a href="#skills">03 // Arsenal</a></li>
+    <li><a href="#experience">04 // Industry</a></li>
+    <li><a href="#academics">05 // Credentials</a></li>
+    <li><a href="#contact">06 // Connect</a></li>
+  </ul>
+
+  <div class="nav-actions">
+    <button class="term-toggle-btn" id="term-toggle" title="Toggle Developer Terminal">
+      <span>[~/] CLI</span>
+    </button>
+    <button class="audio-btn" id="audio-toggle" title="Toggle UI Synthesizer Sound Effects" style="border-color:var(--lime); color:var(--lime);">
+      <span id="audio-icon">♪ SFX: ON</span>
+    </button>
+    <a href="mailto:navens.officials@gmail.com" class="nav-hire-cta">Initialize Contact</a>
+  </div>
+</nav>
+
+<!-- REAL-TIME TELEMETRY STREAM TICKER -->
+<div class="telemetry-ticker">
+  <div class="ticker-content">
+    <span><span class="hi">DEEP SPACE TELEMETRY:</span> DSN LINK ACTIVE // T+2024.08 MISSION CLOCK</span>
+    <span class="sep">///</span>
+    <span><span class="hi">ORBITAL APOGEE:</span> 9.05 CGPA (KPR INSTITUTE OF ENGINEERING &amp; TECH)</span>
+    <span class="sep">///</span>
+    <span><span class="hi">FIELD:</span> SYSTEMS COMPUTING · INDUSTRIAL AUTOMATION · CELESTIAL MECHANICS</span>
+    <span class="sep">///</span>
+    <span><span class="hi">PAYLOAD INTEGRITY:</span> ZERO DATA LOSS ACID ENGINE (FAULT TOLERANT)</span>
+    <span class="sep">///</span>
+    <span><span class="hi">ASTROPHYSICS FOCUS:</span> PULSAR SIGNALS · GRAVITATIONAL DYNAMICS · ORBITAL CONTROL</span>
+    <span class="sep">///</span>
+    <span><span class="hi">NPTEL CERTIFICATION:</span> INDUSTRY 4.0 (ELITE GRADING)</span>
+    <span class="sep">///</span>
+    <span><span class="hi">DEEP SPACE TELEMETRY:</span> DSN LINK ACTIVE // T+2024.08 MISSION CLOCK</span>
+    <span class="sep">///</span>
+    <span><span class="hi">ORBITAL APOGEE:</span> 9.05 CGPA (KPR INSTITUTE OF ENGINEERING &amp; TECH)</span>
+    <span class="sep">///</span>
+    <span><span class="hi">FIELD:</span> SYSTEMS COMPUTING · INDUSTRIAL AUTOMATION · CELESTIAL MECHANICS</span>
+    <span class="sep">///</span>
+    <span><span class="hi">PAYLOAD INTEGRITY:</span> ZERO DATA LOSS ACID ENGINE (FAULT TOLERANT)</span>
+    <span class="sep">///</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     HERO SECTION WITH 3D INTERACTIVE INDUSTRIAL SCULPTURE
+============================================================ -->
+<section id="hero">
+  <div class="hero-content-col">
+    <div class="hero-coords">RA: 18h 36m 56s // DEC: +38° 47′ 01″ — SULUR EARTH STATION // CELESTIAL COORDS</div>
+    <h1 class="hero-headline">
+      Naveen S<br>
+      <span class="italic-serif">Earth to the Cosmos</span>
+    </h1>
+
+    <div class="hero-subtitle-box">
+      <span class="hero-role-chip" style="background:var(--cyan); color:#000;">BE CS &amp; Systems Engineering</span>
+      <span class="hero-role-chip" style="background:var(--lime); color:#000;">Space Computing Enthusiast</span>
+      <span class="hero-academic-chip">KPR Institute of Technology // <strong>Class of 2028</strong></span>
+    </div>
+
+    <p class="hero-narrative">
+      Computer Science Engineering student pairing a <strong>9.05 CGPA</strong> with hands-on Level 1 industrial automation deployments and a passionate focus on <strong>astrophysics, cosmic objects, and celestial telemetry</strong>. Fascinated by the intersection of fault-tolerant systems, orbital mechanics, real-time automation, and space-bound computation where failure is never an option.
+    </p>
+
+    <div class="hero-action-group">
+      <a href="#projects" class="btn-primary-action">
+        <span>Explore Technical Archive</span>
+        <span>→</span>
+      </a>
+      <a href="#contact" class="btn-secondary-action">
+        <span>Request Briefing</span>
+      </a>
+    </div>
+
+    <div class="hero-kpis">
+      <div class="kpi-cell">
+        <div class="kpi-val" data-counter="9.05">0.00</div>
+        <div class="kpi-label">Cumulative GPA</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-val" data-counter="40" data-suffix="%">0%</div>
+        <div class="kpi-label">Factory Latency Cut</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-val" data-counter="100" data-suffix="%">0%</div>
+        <div class="kpi-label">Audit Data Accuracy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Interactive Cybernetic Core Canvas -->
+  <div class="hero-3d-stage">
+    <div class="sculpture-controls-bar">
+      <div class="sculpture-status"><span></span>DSN OBSERVATORY // 3D CELESTIAL ENGINE</div>
+      <div class="sculpture-presets">
+        <button class="sculpture-preset-btn active" data-core-mode="planet">01: TERRA &amp; SATELLITE</button>
+        <button class="sculpture-preset-btn" data-core-mode="blackhole">02: GARGANTUA KERR HOLE</button>
+        <button class="sculpture-preset-btn" data-core-mode="nebula">03: CARINA NEBULA NURSERY</button>
+      </div>
+    </div>
+
+    <!-- Live Telemetry HUD Overlay -->
+    <div class="stage-hud-overlay" id="stage-hud-overlay">
+      <span>DSN CARRIER: <strong id="hud-carrier">8.41 GHz [X-BAND]</strong></span>
+      <span>ORBITAL SPEED: <strong id="hud-speed">7.67 km/s</strong></span>
+      <span>INCLINATION: <strong id="hud-inc">51.64° [LEO]</strong></span>
+      <span>GROUND STATION: <strong id="hud-ground">SULUR 11.0°N / 76.9°E</strong></span>
+    </div>
+
+    <div class="stage-hud-hint">
+      DRAG TO ORBIT // SCROLL TO ZOOM // CLICK TO PING
+    </div>
+
+    <canvas id="three-hero-canvas"></canvas>
+
+    <div class="sculpture-footer-info">
+      <span id="sculpture-telemetry">TARGET: EARTH LEO // SULUR STATION [ONLINE] // ALT: 540 KM</span>
+      <span id="sculpture-pulse-tag" class="sculpture-pulse-tag">[CLICK: ORBITAL TELEMETRY PING]</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 01: STORY & ARCHITECTURAL PHILOSOPHY
+============================================================ */
+============================================================ -->
+<section id="about" class="section-wrapper">
+  <div class="section-tagline" data-index="01">Engineering Philosophy</div>
+  <h2 class="section-heading-big">
+    High rigor.<br>
+    <span class="serif-accent">Measurable outcomes.</span>
+  </h2>
+
+  <div class="about-triptych">
+    <div class="triptych-column">
+      <div class="column-tag">01 // The Trajectory</div>
+      <p class="column-body-text">
+        I entered Computer Science not to write toy exercises, but to interface software directly with the physical and organizational world. At <strong>Starlit Steel Building Solutions</strong>, I turned paper logbooks into an automated Level 1 security gate system that slashed facility entry latency by <strong>40%</strong>.
+      </p>
+      <p class="column-body-text">
+        Every project I construct carries measurable metrics: percentage of time saved, data loss guarantees, spatial resolution gains, or usability speed improvements.
+      </p>
+      <div class="column-quote">
+        "Code has no value until it reduces latency, eliminates error, or solves a genuine structural friction."
+      </div>
+    </div>
+
+    <div class="triptych-column">
+      <div class="column-tag">02 // Core Parameters</div>
+      <ul class="fact-sheet-list">
+        <li>
+          <span class="fact-key">Full Name</span>
+          <span class="fact-val">Naveen S</span>
+        </li>
+        <li>
+          <span class="fact-key">Current Base</span>
+          <span class="fact-val">Sulur, Coimbatore, TN</span>
+        </li>
+        <li>
+          <span class="fact-key">University</span>
+          <span class="fact-val">KPR Institute of Engg.</span>
+        </li>
+        <li>
+          <span class="fact-key">Degree Track</span>
+          <span class="fact-val">BE CSE (2024–2028)</span>
+        </li>
+        <li>
+          <span class="fact-key">Academic Rank</span>
+          <span class="fact-val" style="color:var(--lime);">Top Tier Performance</span>
+        </li>
+        <li>
+          <span class="fact-key">Class XII (HSC)</span>
+          <span class="fact-val">95.0% Aggregate</span>
+        </li>
+        <li>
+          <span class="fact-key">Class X (SSLC)</span>
+          <span class="fact-val">93.3% Aggregate</span>
+        </li>
+        <li>
+          <span class="fact-key">Club Leadership</span>
+          <span class="fact-val">Elected Office Bearer (2 Clubs)</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="triptych-column">
+      <div class="column-tag">03 // Cross-Disciplinary Focus</div>
+      <p class="column-body-text">
+        I deliberately bridge three domains:
+      </p>
+      <p class="column-body-text">
+        <strong>1. Systems &amp; Low-Level:</strong> C, Relational SQL, thread-safe transaction logic, and industrial hardware-layer automation.<br><br>
+        <strong>2. Intelligence &amp; Analytics:</strong> Python scripting, Tesseract OCR OCR classification, Power BI semantic models, and QGIS spatial analysis.<br><br>
+        <strong>3. Interface Architecture:</strong> Figma component frameworks and responsive modern DOM rendering.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 02: TECHNICAL PROJECTS ARCHIVE (3D FLOATING CARDS)
+============================================================ -->
+<section id="projects" class="section-wrapper">
+  <div class="section-tagline" data-index="02">Technical Archive</div>
+  <h2 class="section-heading-big">
+    Featured <span class="serif-accent">systems</span> &amp;<br>
+    <span class="outline-word">deployments</span>
+  </h2>
+  <p style="color:var(--muted-light); max-width:650px; margin-top:.75rem; font-size:.95rem;">
+    Hover over cards to observe interactive 3D perspective tilt and light refraction. Click any card to launch the comprehensive engineering inspector.
+  </p>
+
+  <div class="perspective-card-grid">
+
+    <!-- PROJECT 01 -->
+    <div class="tilt-3d-card" data-project="screenshot">
+      <div class="card-num-watermark">
+        <span>PROJ-01 // OCR UTILITY</span>
+        <span class="card-inspect-hint">[INSPECT]</span>
+      </div>
+      <h3 class="card-title-lg">Smart Screenshot Organizer</h3>
+      <p class="card-summary-p">
+        Systematized a Python-driven background demon utilizing Tesseract OCR to classify, parse text streams, and auto-route image assets into deterministic folder taxonomies. Achieved <span class="stat-highlight">80% reduction</span> in manual file routing time.
+      </p>
+      <div class="card-stack-row">
+        <span class="stack-pill">Python</span>
+        <span class="stack-pill">Tesseract OCR</span>
+        <span class="stack-pill">Watchdog API</span>
+        <span class="stack-pill">Regex Pipeline</span>
+      </div>
+      <div class="card-action-bar">
+        <span class="card-metric-badge">-80% SORT TIME</span>
+        <span class="card-click-trigger">Open Specs →</span>
+      </div>
+    </div>
+
+    <!-- PROJECT 02 -->
+    <div class="tilt-3d-card" data-project="covid">
+      <div class="card-num-watermark">
+        <span>PROJ-02 // SPATIAL ANALYTICS</span>
+        <span class="card-inspect-hint">[INSPECT]</span>
+      </div>
+      <h3 class="card-title-lg">Covid-19 Intelligence Dashboard</h3>
+      <p class="card-summary-p">
+        Ingested epidemiological timeseries covering <span class="stat-highlight">100+ global administrative territories</span>. Integrated QGIS cartographic shapefiles to calibrate spatial accuracy, providing healthcare analysts with actionable regional vaccination velocity trends.
+      </p>
+      <div class="card-stack-row">
+        <span class="stack-pill">Power BI</span>
+        <span class="stack-pill">QGIS</span>
+        <span class="stack-pill">DAX Queries</span>
+        <span class="stack-pill">Spatial Modeling</span>
+      </div>
+      <div class="card-action-bar">
+        <span class="card-metric-badge">100+ REGIONS</span>
+        <span class="card-click-trigger">Open Specs →</span>
+      </div>
+    </div>
+
+    <!-- PROJECT 03 -->
+    <div class="tilt-3d-card" data-project="plantfix">
+      <div class="card-num-watermark">
+        <span>PROJ-03 // HUMAN-CENTERED UI</span>
+        <span class="card-inspect-hint">[INSPECT]</span>
+      </div>
+      <h3 class="card-title-lg">Plantfix: Botanical Care Platform</h3>
+      <p class="card-summary-p">
+        Architected a high-fidelity mobile prototype with <span class="stat-highlight">15+ tested screens</span>. Designed atomic design tokens, diagnostic decision trees, and custom navigation patterns that measurably enhanced task completion speed during formal usability tests.
+      </p>
+      <div class="card-stack-row">
+        <span class="stack-pill">Figma</span>
+        <span class="stack-pill">UI/UX Systems</span>
+        <span class="stack-pill">Usability Testing</span>
+        <span class="stack-pill">Design Tokens</span>
+      </div>
+      <div class="card-action-bar">
+        <span class="card-metric-badge">15+ SCREENS</span>
+        <span class="card-click-trigger">Open Specs →</span>
+      </div>
+    </div>
+
+    <!-- PROJECT 04 -->
+    <div class="tilt-3d-card" data-project="campity">
+      <div class="card-num-watermark">
+        <span>PROJ-04 // CAMPUS ARCHITECTURE</span>
+        <span class="card-inspect-hint">[INSPECT]</span>
+      </div>
+      <h3 class="card-title-lg">Campity: Management Portal</h3>
+      <p class="card-summary-p">
+        Engineered a responsive, high-uptime web portal designed to synchronize institutional event coordination across multiple collegiate departments. Streamlined notification dispatch, club activities, and student communication hubs.
+      </p>
+      <div class="card-stack-row">
+        <span class="stack-pill">HTML5</span>
+        <span class="stack-pill">CSS3 Architecture</span>
+        <span class="stack-pill">Vanilla JavaScript</span>
+        <span class="stack-pill">Responsive DOM</span>
+      </div>
+      <div class="card-action-bar">
+        <span class="card-metric-badge">ZERO OVERHEAD</span>
+        <span class="card-click-trigger">Open Specs →</span>
+      </div>
+    </div>
+
+    <!-- PROJECT 05 -->
+    <div class="tilt-3d-card" data-project="billing">
+      <div class="card-num-watermark">
+        <span>PROJ-05 // TRANSACTION SYSTEMS</span>
+        <span class="card-inspect-hint">[INSPECT]</span>
+      </div>
+      <h3 class="card-title-lg">Self-Operating Billing Engine</h3>
+      <p class="card-summary-p">
+        Constructed a resilient transaction processing engine in pure C with SQL relational schema. Simulated high-frequency financial write requests yielding <span class="stat-highlight">zero data loss</span>, strict ACID guarantees, and optimized index query retrieval.
+      </p>
+      <div class="card-stack-row">
+        <span class="stack-pill">C Programming</span>
+        <span class="stack-pill">SQL Relational DB</span>
+        <span class="stack-pill">ACID Transactions</span>
+        <span class="stack-pill">File Serialization</span>
+      </div>
+      <div class="card-action-bar">
+        <span class="card-metric-badge">0% DATA LOSS</span>
+        <span class="card-click-trigger">Open Specs →</span>
+      </div>
+    </div>
+
+    <!-- PROJECT 06 (STARLIT AUTOMATION) -->
+    <div class="tilt-3d-card" data-project="starlit">
+      <div class="card-num-watermark">
+        <span>PROJ-06 // INDUSTRIAL DEPLOYMENT</span>
+        <span class="card-inspect-hint">[INSPECT]</span>
+      </div>
+      <h3 class="card-title-lg">Level 1 Factory Gate Automation</h3>
+      <p class="card-summary-p">
+        Deployed at Starlit Steel Solutions. Substituted legacy analog gate journals with computerized identity tracking. Decreased worker transit bottleneck by <span class="stat-highlight">40%</span> while securing <span class="stat-highlight">100% data audit accuracy</span>.
+      </p>
+      <div class="card-stack-row">
+        <span class="stack-pill">L1 Automation</span>
+        <span class="stack-pill">Hardware Protocols</span>
+        <span class="stack-pill">Audit Trail DB</span>
+        <span class="stack-pill">Operator GUI</span>
+      </div>
+      <div class="card-action-bar">
+        <span class="card-metric-badge">100% ACCURACY</span>
+        <span class="card-click-trigger">Open Specs →</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 03: SKILLS ARSENAL & PROFICIENCY BARS
+============================================================ -->
+<section id="skills" class="section-wrapper">
+  <div class="section-tagline" data-index="03">Technical Capabilities</div>
+  <h2 class="section-heading-big">
+    Verified <span class="serif-accent">skills</span> &amp;<br>
+    <span class="outline-word">competencies</span>
+  </h2>
+
+  <div class="skills-master-layout">
+    <div class="skills-sidebar-sticky">
+      <ul class="matrix-menu">
+        <li class="matrix-menu-item active" data-target="panel-prog">
+          <div class="matrix-num">01</div>
+          <div class="matrix-label">Programming</div>
+        </li>
+        <li class="matrix-menu-item" data-target="panel-web">
+          <div class="matrix-num">02</div>
+          <div class="matrix-label">Web Technologies</div>
+        </li>
+        <li class="matrix-menu-item" data-target="panel-data">
+          <div class="matrix-num">03</div>
+          <div class="matrix-label">Data &amp; Analytics</div>
+        </li>
+        <li class="matrix-menu-item" data-target="panel-design">
+          <div class="matrix-num">04</div>
+          <div class="matrix-label">Design &amp; Tools</div>
+        </li>
+      </ul>
+
+      <div style="margin-top:2.5rem; padding:1.5rem; background:var(--bg2); border:1px solid var(--border);">
+        <div style="font-family:var(--ff-mono); font-size:.65rem; color:var(--lime); text-transform:uppercase; margin-bottom:.5rem;">CORE STRENGTH:</div>
+        <p style="font-size:.85rem; color:var(--muted-light); line-height:1.6;">
+          Demonstrated mastery in systems programming (C), computational scripting (Python), and relational query engineering (PostgreSQL / MySQL).
+        </p>
+      </div>
+    </div>
+
+    <div class="skills-panel-group">
+      <!-- PANEL 01 -->
+      <div class="skill-card-block" id="panel-prog">
+        <div class="skill-card-topbar">
+          <div class="skill-card-heading">Programming Languages</div>
+          <div class="skill-card-meta">SYS // LEVEL 01</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">C (Proficient)</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="92"></div></div>
+          <div class="prog-number">92%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Python</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="84"></div></div>
+          <div class="prog-number">84%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">SQL (Postgres/MySQL)</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="82"></div></div>
+          <div class="prog-number">82%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Java (Core Basics)</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="50"></div></div>
+          <div class="prog-number">50%</div>
+        </div>
+      </div>
+
+      <!-- PANEL 02 -->
+      <div class="skill-card-block" id="panel-web">
+        <div class="skill-card-topbar">
+          <div class="skill-card-heading">Web &amp; Interface Engineering</div>
+          <div class="skill-card-meta">DOM // LEVEL 02</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">HTML5 Semantic</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="88"></div></div>
+          <div class="prog-number">88%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">CSS3 Modern Layout</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="85"></div></div>
+          <div class="prog-number">85%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Responsive Design</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="90"></div></div>
+          <div class="prog-number">90%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">JavaScript (ES6+)</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="65"></div></div>
+          <div class="prog-number">65%</div>
+        </div>
+      </div>
+
+      <!-- PANEL 03 -->
+      <div class="skill-card-block" id="panel-data">
+        <div class="skill-card-topbar">
+          <div class="skill-card-heading">Data &amp; Spatial Analytics</div>
+          <div class="skill-card-meta">ANALYTICS // LEVEL 03</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Power BI Dashboards</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="82"></div></div>
+          <div class="prog-number">82%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">QGIS Spatial Mapping</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="75"></div></div>
+          <div class="prog-number">75%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Tableau Data Viz</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="68"></div></div>
+          <div class="prog-number">68%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Relational Data Modeling</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="80"></div></div>
+          <div class="prog-number">80%</div>
+        </div>
+      </div>
+
+      <!-- PANEL 04 -->
+      <div class="skill-card-block" id="panel-design">
+        <div class="skill-card-topbar">
+          <div class="skill-card-heading">Tools, Design &amp; Methodology</div>
+          <div class="skill-card-meta">TOOLING // LEVEL 04</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Figma UI/UX Systems</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="82"></div></div>
+          <div class="prog-number">82%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">MATLAB &amp; App Building</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="65"></div></div>
+          <div class="prog-number">65%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">Git &amp; GitHub Versioning</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="80"></div></div>
+          <div class="prog-number">80%</div>
+        </div>
+
+        <div class="skill-prog-row">
+          <div class="prog-title">AI Prompt Engineering</div>
+          <div class="prog-rail"><div class="prog-fill-inner" data-width="85"></div></div>
+          <div class="prog-number">85%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 04: INDUSTRIAL EXPERIENCE DEEP-DIVE
+============================================================ -->
+<section id="experience" class="section-wrapper">
+  <div class="section-tagline" data-index="04">Factory Deployment</div>
+  <h2 class="section-heading-big">
+    Starlit Steel<br>
+    <span class="serif-accent">Automation Case Study</span>
+  </h2>
+
+  <div class="starlit-featured-case">
+    <div class="case-left-pane">
+      <div class="case-tag">Industrial Automation Project // 4 Weeks On-Site</div>
+      <h3 class="case-title">Architecting the Gate Entry <span>Level 1 System</span></h3>
+      <p class="case-narrative-p">
+        Starlit Steel Building Solutions (Gopichettipalayam, TN) manages hundreds of incoming industrial personnel and logistics carriers daily. Their legacy procedure relied upon manual registry books, leading to chronic entry bottlenecks and vulnerable data audits.
+      </p>
+      <p class="case-narrative-p">
+        Over a rigorous 4-week on-site internship, I designed, configured, and deployed a computerized entry tracking engine operating under Level 1 Industrial Automation protocols.
+      </p>
+
+      <div class="case-grid-metrics">
+        <div class="case-metric-box">
+          <div class="c-metric-num">-40%</div>
+          <div class="c-metric-label">Transit Processing Duration</div>
+        </div>
+        <div class="case-metric-box">
+          <div class="c-metric-num">100%</div>
+          <div class="c-metric-label">Audit Record Accuracy</div>
+        </div>
+        <div class="case-metric-box">
+          <div class="c-metric-num">0 Logs</div>
+          <div class="c-metric-label">Paper Register Elimination</div>
+        </div>
+        <div class="case-metric-box">
+          <div class="c-metric-num">24/7</div>
+          <div class="c-metric-label">Continuous Uptime Cycle</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-right-pane">
+      <div style="font-family:var(--ff-mono); font-size:.68rem; color:var(--lime); text-transform:uppercase; letter-spacing:.12em; margin-bottom:1.5rem;">
+        // KEY ENGINEERING DELIVERABLES
+      </div>
+      <ul class="case-deliverables-list">
+        <li>
+          <strong>Level 1 Architecture:</strong> Implemented hardware and software interfaces for identity validation directly at the plant barrier, eliminating human logging discrepancies.
+        </li>
+        <li>
+          <strong>Security Protocol Integration:</strong> Integrated automated verification routines ensuring only authorized personnel and compliant industrial vehicles gain clearance.
+        </li>
+        <li>
+          <strong>Tamper-Proof Timestamps:</strong> Structured a structured database pipeline capturing microsecond entry/exit timestamps for monthly safety and regulatory audits.
+        </li>
+        <li>
+          <strong>Staff Training &amp; Operational Docs:</strong> Authored standard operating procedures (SOPs) and instructed plant security staff on zero-downtime maintenance.
+        </li>
+      </ul>
+
+      <div style="margin-top:2rem; padding:1.2rem; background:var(--bg); border:1px solid var(--border);">
+        <div style="font-family:var(--ff-mono); font-size:.62rem; color:var(--muted); text-transform:uppercase;">ACCREDITATION VERIFICATION:</div>
+        <div style="font-size:.85rem; color:var(--cream); margin-top:.3rem;">
+          Verified 4-Week Industrial Internship Certificate, Starlit Steel Building Solutions.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 05: ACADEMICS & RECOGNITION
+============================================================ -->
+<section id="academics" class="section-wrapper">
+  <div class="section-tagline" data-index="05">Academic Standing</div>
+  <h2 class="section-heading-big">
+    Verified <span class="serif-accent">records</span> &amp;<br>
+    <span class="outline-word">certifications</span>
+  </h2>
+
+  <div class="academic-cards-grid">
+    <div class="academic-card">
+      <div class="academic-topbar">
+        <span style="font-size:1.6rem;">🏛️</span>
+        <span class="academic-grade-badge">9.05 CGPA</span>
+      </div>
+      <h3 class="academic-degree-name">Bachelor of Engineering in Computer Science</h3>
+      <div class="academic-institution">KPR Institute of Engineering and Technology</div>
+      <div class="academic-tenure">2024 — 2028 // Coimbatore, TN</div>
+      <p class="academic-detail-p">
+        Ranked among the top performance tier of the 2028 cohort. Rigorous coursework in C, Data Structures, OOP, SQL database systems, and Discrete Mathematics.
+      </p>
+    </div>
+
+    <div class="academic-card">
+      <div class="academic-topbar">
+        <span style="font-size:1.6rem;">📐</span>
+        <span class="academic-grade-badge">95.0% SCORE</span>
+      </div>
+      <h3 class="academic-degree-name">Higher Secondary Certificate (HSC) — Class XII</h3>
+      <div class="academic-institution">P.D.R.V. Matric. Higher Secondary School</div>
+      <div class="academic-tenure">Class XII // Dharmapuri, TN</div>
+      <p class="academic-detail-p">
+        Achieved a 95.0% score in board examinations with top honors in Mathematics and Computer Science, establishing analytical problem-solving foundations.
+      </p>
+    </div>
+
+    <div class="academic-card">
+      <div class="academic-topbar">
+        <span style="font-size:1.6rem;">📜</span>
+        <span class="academic-grade-badge outline">93.3% SCORE</span>
+      </div>
+      <h3 class="academic-degree-name">Secondary School Certificate (SSLC) — Class X</h3>
+      <div class="academic-institution">P.D.R.V. Matric. Higher Secondary School</div>
+      <div class="academic-tenure">Class X // Dharmapuri, TN</div>
+      <p class="academic-detail-p">
+        Demonstrated consistent high academic diligence with 93.3% in secondary matriculation examinations.
+      </p>
+    </div>
+  </div>
+
+  <!-- Credentials Dual Pane -->
+  <div class="certs-double-pane">
+    <div class="cert-half">
+      <h3 class="cert-half-heading">National Certifications</h3>
+      <ul class="credential-items-list">
+        <li>
+          <div class="cred-bullet-icon">★</div>
+          <div>
+            <strong>NPTEL Industry 4.0 (Elite Grading):</strong><br>
+            Attained certification with Elite rank, demonstrating comprehensive mastery in modern smart manufacturing, industrial IoT, and digital factory architecture.
+          </div>
+        </li>
+        <li>
+          <div class="cred-bullet-icon">01</div>
+          <div>
+            <strong>Cisco CCNA (Module 1 in progress):</strong><br>
+            Finalizing network layer protocols, routing foundations, IPv4/IPv6 subnetting, and enterprise network design.
+          </div>
+        </li>
+        <li>
+          <div class="cred-bullet-icon">02</div>
+          <div>
+            <strong>MATLAB App Building:</strong><br>
+            MathWorks certified modules in constructing graphical computational apps and simulation workflows.
+          </div>
+        </li>
+        <li>
+          <div class="cred-bullet-icon">03</div>
+          <div>
+            <strong>Infosys Springboard &amp; Power BI Challenge:</strong><br>
+            Secured verified credentials in business analytics, database schemas, and dashboard architecture.
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="cert-half">
+      <h3 class="cert-half-heading">Leadership &amp; Community Impact</h3>
+      <ul class="credential-items-list">
+        <li>
+          <div class="cred-bullet-icon">👑</div>
+          <div>
+            <strong>Club Office Bearer (2 Major College Clubs):</strong><br>
+            Elected leadership responsible for orchestrating large-scale technical symposiums, logistical operations, and inter-departmental student communication.
+          </div>
+        </li>
+        <li>
+          <div class="cred-bullet-icon">🤝</div>
+          <div>
+            <strong>Youth Red Cross (YRC) Volunteer:</strong><br>
+            Facilitated local community outreach initiatives that directly serviced over <strong>200+ local beneficiaries</strong> across regional healthcare and support programs.
+          </div>
+        </li>
+        <li>
+          <div class="cred-bullet-icon">💬</div>
+          <div>
+            <strong>Institutional Public Relations:</strong><br>
+            Recognized for systematizing collegiate workflows and elevating student engagement across institutional forums.
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 06: CONTACT & INITIATE DIALOGUE
+============================================================ -->
+<section id="contact" class="section-wrapper">
+  <div class="contact-dual-stage">
+    <div>
+      <div class="section-tagline" data-index="06">Communication Channel</div>
+      <h2 class="contact-giant-text">
+        Let's build<br>
+        <span class="italic-accent">something resilient.</span>
+      </h2>
+      <p style="color:var(--muted-light); font-size:1.05rem; line-height:1.75; max-width:480px;">
+        Currently receptive to software engineering internships, industrial automation R&amp;D projects, and technical collaborations. Reach out directly or dispatch a transmission.
+      </p>
+
+      <ul class="contact-comms-list">
+        <li>
+          <a href="mailto:navens.officials@gmail.com" class="comm-anchor">
+            <span class="comm-identity">✉ EMAIL TRANSMISSION</span>
+            <span class="comm-endpoint">navens.officials@gmail.com</span>
+            <span class="comm-arrow">↗</span>
+          </a>
+        </li>
+        <li>
+          <a href="tel:+919952747859" class="comm-anchor">
+            <span class="comm-identity">☎ DIRECT TELEPHONE</span>
+            <span class="comm-endpoint">+91 99527 47859</span>
+            <span class="comm-arrow">↗</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://linkedin.com/in/naveen-s-a5bb17328" target="_blank" rel="noopener" class="comm-anchor">
+            <span class="comm-identity">in LINKEDIN DOSSIER</span>
+            <span class="comm-endpoint">naveen-s-a5bb17328</span>
+            <span class="comm-arrow">↗</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com" target="_blank" rel="noopener" class="comm-anchor">
+            <span class="comm-identity">⌥ GITHUB REPOSITORY</span>
+            <span class="comm-endpoint">View Code Repos</span>
+            <span class="comm-arrow">↗</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Contact Dispatch Form -->
+    <div class="interactive-message-card">
+      <div style="font-family:var(--ff-mono); font-size:.68rem; color:var(--lime); text-transform:uppercase; letter-spacing:.15em; margin-bottom:1.5rem;">
+        // DISPATCH TRANSMISSION
+      </div>
+      <form id="contact-form" onsubmit="handleFormSubmit(event)">
+        <div class="msg-field">
+          <label class="msg-label">Sender Identity / Company</label>
+          <input type="text" class="msg-input" placeholder="e.g. Elena Rostova / Tesla Automation" required>
+        </div>
+        <div class="msg-field">
+          <label class="msg-label">Return Communication Endpoint</label>
+          <input type="email" class="msg-input" placeholder="e.g. elena@company.com" required>
+        </div>
+        <div class="msg-field">
+          <label class="msg-label">Project Scope / Inquiry Details</label>
+          <textarea class="msg-textarea" placeholder="Detail the engagement scope, internship opportunity, or technical inquiry..." required></textarea>
+        </div>
+        <button type="submit" class="btn-submit-message">
+          <span>Transmit Message</span>
+          <span>→</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     INTERACTIVE PROJECT INSPECT DRAWER
+============================================================ -->
+<div id="project-drawer">
+  <div class="drawer-window">
+    <div class="drawer-header">
+      <div class="drawer-title-meta" id="drawer-meta">// SYSTEM SPECIFICATION SHEET</div>
+      <button class="drawer-close-btn" id="drawer-close">[CLOSE ESC]</button>
+    </div>
+    <div class="drawer-content-body" id="drawer-body">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FLOATING DEVELOPER TERMINAL HUD
+============================================================ -->
+<div id="terminal-hud">
+  <div class="term-bar">
+    <div class="term-bar-title">// NAVEEN_TERMINAL v2.4 (CLI MODE)</div>
+    <button class="term-close-x" id="term-close">×</button>
+  </div>
+  <div class="term-screen" id="term-screen">
+    <div style="color:var(--lime);">[SYSTEM READY] Naveen S Engineering Console</div>
+    <div>Type '<span style="color:var(--lime);">help</span>' to inspect supported commands.</div>
+    <br>
+  </div>
+  <div class="term-input-row">
+    <span class="term-prompt-char">naveen@portfolio:~$</span>
+    <input type="text" id="term-input" autocomplete="off" spellcheck="false" placeholder="Type command (e.g. 'skills', 'cgpa', 'projects')">
+  </div>
+</div>
+
+<!-- ============================================================
+     SITE FOOTER
+============================================================ -->
+<footer>
+  <div class="footer-left-brand">
+    NAVEEN<span>.S</span>
+  </div>
+  <div class="footer-status-pill">
+    BE CSE '28 // DESIGNED &amp; ENGINEERED FOR RESILIENCE
+  </div>
+  <ul class="footer-links-row">
+    <li><a href="mailto:navens.officials@gmail.com">Email</a></li>
+    <li><a href="https://linkedin.com/in/naveen-s-a5bb17328" target="_blank" rel="noopener">LinkedIn</a></li>
+    <li><a href="#hero">Back to Top ↑</a></li>
+  </ul>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT: 3D THREE.JS, AUDIO SYNTH, HUD CLI & TILT
+============================================================ -->
+<script>
+/* ============================================================
+   1. SOUND SYNTHESIZER (WEB AUDIO API - ENHANCED CYBERNETIC SFX)
+============================================================ */
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// Global unlock on first user gesture anywhere
+function unlockAudioOnFirstInteraction() {
+  initAudio();
+  if (audioCtx && soundEnabled) {
+    playSystemBootSound();
+  }
+  window.removeEventListener('click', unlockAudioOnFirstInteraction);
+  window.removeEventListener('keydown', unlockAudioOnFirstInteraction);
+  window.removeEventListener('touchstart', unlockAudioOnFirstInteraction);
+}
+window.addEventListener('click', unlockAudioOnFirstInteraction, { passive: true });
+window.addEventListener('keydown', unlockAudioOnFirstInteraction, { passive: true });
+window.addEventListener('touchstart', unlockAudioOnFirstInteraction, { passive: true });
+
+// System startup chime
+function playTerminalKeystroke() {
+  if (!audioCtx || !soundEnabled) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    // High-precision mechanical key switch transient
+    const freq = 1800 + Math.random() * 800;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.type = 'triangle';
+    gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.022);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.025);
+  } catch(e) {}
+}
+
+function playSystemBootSound() {
+  if (!soundEnabled || !audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.06);
+      gain.gain.setValueAtTime(0.001, now + i * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + i * 0.06 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.06 + 0.16);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + i * 0.06);
+      osc.stop(now + i * 0.06 + 0.18);
+    });
+  } catch (e) {}
+}
+
+// Crisp UI Hover Tick
+function playHoverSound() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    const now = audioCtx.currentTime;
+    osc.frequency.setValueAtTime(1600, now);
+    osc.frequency.exponentialRampToValueAtTime(2400, now + 0.025);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.03);
+  } catch (e) {}
+}
+
+// Primary Click Blip
+function playBlip(freq = 900, type = 'triangle', duration = 0.05) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    const now = audioCtx.currentTime;
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  } catch (e) {}
+}
+
+// Resonant Electromagnetic Shockwave (For 3D Gyroscope Click)
+
+// Astrophysical Gravitational Wave Chirp (LIGO inspired chirp: 80Hz -> 650Hz rising sweep)
+function playGravitationalWaveChirp() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(85, now);
+    osc.frequency.exponentialRampToValueAtTime(750, now + 0.28);
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.38, now + 0.22);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.32);
+  } catch (e) {}
+}
+
+// Relativistic Pulsar Radio Telemetry Ping
+function playPulsarRadioSound() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    [1200, 1500, 1800].forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+      gain.gain.setValueAtTime(0.18, now + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.04 + 0.035);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + 0.04);
+    });
+  } catch (e) {}
+}
+
+function playPulseSound() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    // Sub bass sweep
+    const oscSub = audioCtx.createOscillator();
+    const gainSub = audioCtx.createGain();
+    oscSub.type = 'sine';
+    oscSub.frequency.setValueAtTime(140, now);
+    oscSub.frequency.exponentialRampToValueAtTime(60, now + 0.28);
+    gainSub.gain.setValueAtTime(0.35, now);
+    gainSub.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    oscSub.connect(gainSub);
+    gainSub.connect(audioCtx.destination);
+    oscSub.start(now);
+    oscSub.stop(now + 0.28);
+
+    // High laser ping
+    const oscPing = audioCtx.createOscillator();
+    const gainPing = audioCtx.createGain();
+    oscPing.type = 'triangle';
+    oscPing.frequency.setValueAtTime(1800, now);
+    oscPing.frequency.exponentialRampToValueAtTime(450, now + 0.15);
+    gainPing.gain.setValueAtTime(0.25, now);
+    gainPing.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    oscPing.connect(gainPing);
+    gainPing.connect(audioCtx.destination);
+    oscPing.start(now);
+    oscPing.stop(now + 0.16);
+  } catch (e) {}
+}
+
+// Drawer Open/Close Telemetry Sweep
+function playDrawerSound(isOpen = true) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const now = audioCtx.currentTime;
+    osc.type = 'sine';
+    if (isOpen) {
+      osc.frequency.setValueAtTime(350, now);
+      osc.frequency.exponentialRampToValueAtTime(950, now + 0.12);
+    } else {
+      osc.frequency.setValueAtTime(950, now);
+      osc.frequency.exponentialRampToValueAtTime(280, now + 0.1);
+    }
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+  } catch (e) {}
+}
+
+// Mechanical Keystroke Clack (For Terminal CLI)
+function playKeyClack(isBackspace = false) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const baseFreq = isBackspace ? (420 + Math.random() * 80) : (920 + Math.random() * 240);
+    osc.type = isBackspace ? 'triangle' : 'square';
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.35, now + 0.035);
+    gain.gain.setValueAtTime(isBackspace ? 0.16 : 0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  } catch (e) {}
+}
+
+// Terminal Command Execution Response (Success chirp vs Error buzz)
+function playCommandSound(isSuccess = true) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    if (isSuccess) {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(650, now);
+      osc.frequency.exponentialRampToValueAtTime(1300, now + 0.09);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+    } else {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.15);
+      gain.gain.setValueAtTime(0.24, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    }
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + (isSuccess ? 0.11 : 0.17));
+  } catch (e) {}
+}
+
+// Terminal Power Boot / Collapse Sound
+function playTerminalPowerSound(isOpen = true) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    if (isOpen) {
+      osc.frequency.setValueAtTime(240, now);
+      osc.frequency.exponentialRampToValueAtTime(1400, now + 0.14);
+    } else {
+      osc.frequency.setValueAtTime(1300, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.12);
+    }
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  } catch (e) {}
+}
+
+const audioToggleBtn = document.getElementById('audio-toggle');
+const audioIcon = document.getElementById('audio-icon');
+
+audioToggleBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  initAudio();
+  soundEnabled = !soundEnabled;
+  audioIcon.textContent = soundEnabled ? '♪ SFX: ON' : '♪ SFX: MUTED';
+  audioToggleBtn.style.borderColor = soundEnabled ? 'var(--lime)' : 'var(--border)';
+  audioToggleBtn.style.color = soundEnabled ? 'var(--lime)' : 'var(--muted)';
+  if (soundEnabled) {
+    playSystemBootSound();
+  }
+});
+
+/* ============================================================
+   2. CUSTOM CURSOR & MOUSE FOLLOWER
+============================================================ */
+const dot = document.getElementById('cursor-dot');
+const follower = document.getElementById('cursor-follower');
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let followerX = mouseX;
+let followerY = mouseY;
+
+window.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  dot.style.left = mouseX + 'px';
+  dot.style.top = mouseY + 'px';
+});
+
+function animateCursor() {
+  followerX += (mouseX - followerX) * 0.15;
+  followerY += (mouseY - followerY) * 0.15;
+  follower.style.left = followerX + 'px';
+  follower.style.top = followerY + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+document.querySelectorAll('a, button, .tilt-3d-card, .kpi-cell, .matrix-menu-item').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    document.body.classList.add('hovered');
+    playHoverSound();
+  });
+  el.addEventListener('mouseleave', () => {
+    document.body.classList.remove('hovered');
+  });
+});
+
+/* ============================================================
+   3. SCROLL PROGRESS
+============================================================ */
+const topProgress = document.getElementById('top-progress');
+const navbar = document.getElementById('navbar');
+
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  topProgress.style.width = progress + '%';
+  navbar.classList.toggle('scrolled', scrollTop > 40);
+});
+
+/* ============================================================
+   4. THREE.JS: REALISTIC COSMIC STARFIELD & GRAVITATIONAL CURVATURE
+============================================================ */
+const bgCanvas = document.getElementById('webgl-bg');
+const bgRenderer = new THREE.WebGLRenderer({ canvas: bgCanvas, alpha: true, antialias: false });
+bgRenderer.setSize(window.innerWidth, window.innerHeight);
+bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+const bgScene = new THREE.Scene();
+const bgCamera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+bgCamera.position.set(0, 0, 18);
+
+// Procedural Soft Round Star Sprite Texture
+function createSoftStarTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  const radGrad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  radGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  radGrad.addColorStop(0.2, 'rgba(180, 235, 255, 0.85)');
+  radGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.25)');
+  radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radGrad;
+  ctx.fillRect(0, 0, 32, 32);
+  return new THREE.CanvasTexture(canvas);
+}
+const starTexture = createSoftStarTexture();
+
+// Spacetime Gravitational Curvature Grid
+const spacetimeGeo = new THREE.PlaneGeometry(80, 60, 60, 45);
+const spacetimeMat = new THREE.MeshBasicMaterial({
+  color: 0x14182b,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.28
+});
+const spacetimePlane = new THREE.Mesh(spacetimeGeo, spacetimeMat);
+spacetimePlane.rotation.x = -Math.PI / 2.5;
+spacetimePlane.position.y = -7.5;
+bgScene.add(spacetimePlane);
+
+// 1,200 Soft Twinkling Stars
+const starCount = 1200;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+const starColors = new Float32Array(starCount * 3);
+
+for (let s = 0; s < starCount; s++) {
+  starPos[s * 3]     = (Math.random() - 0.5) * 85;
+  starPos[s * 3 + 1] = (Math.random() - 0.5) * 55;
+  starPos[s * 3 + 2] = (Math.random() - 0.5) * 45;
+
+  const rnd = Math.random();
+  if (rnd > 0.8) {
+    starColors[s * 3] = 0.0; starColors[s * 3 + 1] = 0.94; starColors[s * 3 + 2] = 1.0; // Cyan
+  } else if (rnd > 0.65) {
+    starColors[s * 3] = 0.83; starColors[s * 3 + 1] = 1.0; starColors[s * 3 + 2] = 0.0; // Lime
+  } else if (rnd > 0.5) {
+    starColors[s * 3] = 1.0; starColors[s * 3 + 1] = 0.7; starColors[s * 3 + 2] = 0.3; // Amber
+  } else {
+    starColors[s * 3] = 0.96; starColors[s * 3 + 1] = 0.98; starColors[s * 3 + 2] = 1.0; // White
+  }
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+const starMat = new THREE.PointsMaterial({
+  size: 0.35,
+  map: starTexture,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.85,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+const starField = new THREE.Points(starGeo, starMat);
+bgScene.add(starField);
+
+let bgClock = new THREE.Clock();
+
+function animateBg() {
+  const t = bgClock.getElapsedTime();
+
+  const pos = spacetimeGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const u = pos.getX(i);
+    const v = pos.getY(i);
+    const distToCenter = Math.sqrt(u * u + v * v);
+    const gravityWell = -3.2 / (1.0 + distToCenter * 0.2);
+    const ripples = Math.sin(distToCenter * 0.4 - t * 0.9) * 0.45;
+    pos.setZ(i, gravityWell + ripples);
+  }
+  spacetimeGeo.computeVertexNormals();
+  spacetimeGeo.attributes.position.needsUpdate = true;
+
+  starField.rotation.y = t * 0.008;
+
+  bgRenderer.render(bgScene, bgCamera);
+  requestAnimationFrame(animateBg);
+}
+animateBg();
+
+/* ============================================================
+   5. THREE.JS: HERO 3D PHOTOREALISTIC CELESTIAL VIEWPORT
+============================================================ */
+const hero3DCanvas = document.getElementById('three-hero-canvas');
+const heroRenderer = new THREE.WebGLRenderer({ canvas: hero3DCanvas, alpha: true, antialias: true });
+const stageRect = hero3DCanvas.parentElement.getBoundingClientRect();
+heroRenderer.setSize(stageRect.width, stageRect.height);
+heroRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const heroScene = new THREE.Scene();
+const heroCamera = new THREE.PerspectiveCamera(45, stageRect.width / stageRect.height, 0.1, 100);
+heroCamera.position.set(0, 0, 4.6);
+
+// Master Celestial Group
+const celestialMaster = new THREE.Group();
+heroScene.add(celestialMaster);
+
+// Lighting Rig
+const spaceSunLight = new THREE.DirectionalLight(0xfff6e6, 3.2);
+spaceSunLight.position.set(8, 4, 6);
+heroScene.add(spaceSunLight);
+
+const spaceFillLight = new THREE.AmbientLight(0x0c162e, 1.4);
+heroScene.add(spaceFillLight);
+
+const blueLimbRimLight = new THREE.DirectionalLight(0x00f0ff, 1.8);
+blueLimbRimLight.position.set(-8, -4, -4);
+heroScene.add(blueLimbRimLight);
+
+/* ============================================================
+   APOLLO QUINDAR AUDIO SYNTHESIZER
+============================================================ */
+function playQuindarTone(isIntro = true) {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    // Classic NASA Quindar Tones: Intro = 2524 Hz, End = 2475 Hz
+    osc.frequency.setValueAtTime(isIntro ? 2524 : 2475, audioCtx.currentTime);
+    osc.type = 'sine';
+    
+    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.24);
+  } catch(e) {}
+}
+
+function playCosmicWarp() {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.35);
+    
+    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.42);
+  } catch(e) {}
+}
+
+/* ============================================================
+   MODE 01: PHOTOREALISTIC PROCEDURAL TERRA & SATELLITE
+============================================================ */
+const planetGroup = new THREE.Group();
+celestialMaster.add(planetGroup);
+
+// Generate High-Resolution Detailed Earth Texture (2048 x 1024)
+function createPhotorealisticEarthTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024; canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  // 1. Deep Ocean Base with Bathymetric Gradients
+  const oceanGrad = ctx.createLinearGradient(0, 0, 0, 512);
+  oceanGrad.addColorStop(0, '#020713');
+  oceanGrad.addColorStop(0.2, '#040d24');
+  oceanGrad.addColorStop(0.5, '#06163a');
+  oceanGrad.addColorStop(0.8, '#040d24');
+  oceanGrad.addColorStop(1, '#020713');
+  ctx.fillStyle = oceanGrad;
+  ctx.fillRect(0, 0, 1024, 512);
+
+  // 2. Continental Continental Shelves (Turquoise coastal shallow waters)
+  ctx.fillStyle = '#0a2f4a';
+  for (let c = 0; c < 36; c++) {
+    const cx = (c * 33) % 1024;
+    const cy = 70 + ((c * 41) % 360);
+    const rad = 50 + (c % 6) * 16;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rad * 1.6, rad * 1.1, (c * 0.28), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 3. Realistic Continental Landmasses with Biome Colors
+  // Tropical Forest Greens
+  ctx.fillStyle = '#1c3d25';
+  for (let c = 0; c < 32; c++) {
+    const cx = (c * 33 + 6) % 1024;
+    const cy = 80 + ((c * 41 + 8) % 340);
+    const rad = 40 + (c % 5) * 14;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rad * 1.45, rad * 0.95, (c * 0.3), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Arid & Savanna Ochres / Deserts
+  ctx.fillStyle = '#6e5d36';
+  for (let c = 0; c < 16; c++) {
+    const cx = (c * 65 + 120) % 1024;
+    const cy = 130 + ((c * 47) % 220);
+    const rad = 25 + (c % 4) * 12;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rad * 1.3, rad * 0.7, (c * 0.4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Polar Ice Sheets (Arctic & Antarctica)
+  ctx.fillStyle = '#e2f1fc';
+  ctx.fillRect(0, 0, 1024, 38);
+  ctx.fillRect(0, 474, 1024, 38);
+  for (let i = 0; i < 20; i++) {
+    ctx.beginPath();
+    ctx.ellipse((i * 54) % 1024, 38, 45, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse((i * 54 + 20) % 1024, 474, 45, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 4. Night-Side City Lights (Golden Micro-Clusters)
+  ctx.fillStyle = '#ffeaa1';
+  for (let n = 0; n < 340; n++) {
+    const nx = (n * 13 + (n % 7) * 9) % 1024;
+    const ny = 95 + ((n * 27) % 310);
+    // Cluster effect for urban density
+    ctx.globalAlpha = 0.35 + (n % 4) * 0.2;
+    ctx.fillRect(nx, ny, 1.8, 1.8);
+    if (n % 3 === 0) {
+      ctx.fillRect(nx + 2, ny + 1, 1.2, 1.2);
+    }
+  }
+  ctx.globalAlpha = 1.0;
+
+  // 5. Sulur / Coimbatore Dedicated Deep Space Network Ground Station Marker
+  // Approx Sulur coordinates: Lat 11.0°N, Long 76.9°E
+  const sulurX = Math.round((76.9 / 360) * 1024);
+  const sulurY = Math.round(((90 - 11.0) / 180) * 512);
+
+  // Pulse rings around Sulur
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(sulurX, sulurY, 8, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#00f0ff';
+  ctx.beginPath();
+  ctx.arc(sulurX, sulurY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+const earthTexture = createPhotorealisticEarthTexture();
+const earthGeo = new THREE.SphereGeometry(1.22, 64, 64);
+const earthMat = new THREE.MeshStandardMaterial({
+  map: earthTexture,
+  roughness: 0.55,
+  metalness: 0.12
+});
+const earthMesh = new THREE.Mesh(earthGeo, earthMat);
+earthMesh.rotation.z = 23.5 * Math.PI / 180; // Earth's actual 23.5° axial tilt
+planetGroup.add(earthMesh);
+
+// Cloud Atmosphere Canopy Layer
+function createCloudTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024; canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0)';
+  ctx.fillRect(0, 0, 1024, 512);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+  for (let i = 0; i < 75; i++) {
+    const x = Math.random() * 1024;
+    const y = 50 + Math.random() * 412;
+    const w = 45 + Math.random() * 85;
+    const h = 8 + Math.random() * 18;
+    ctx.beginPath();
+    ctx.ellipse(x, y, w, h, (Math.random() - 0.5) * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+const cloudTexture = createCloudTexture();
+const cloudGeo = new THREE.SphereGeometry(1.24, 48, 48);
+const cloudMat = new THREE.MeshStandardMaterial({
+  map: cloudTexture,
+  transparent: true,
+  opacity: 0.48,
+  blending: THREE.AdditiveBlending
+});
+const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+cloudMesh.rotation.z = earthMesh.rotation.z;
+planetGroup.add(cloudMesh);
+
+// Rayleigh Scattering Atmospheric Glow Halo (Custom Shader)
+const atmoGeo = new THREE.SphereGeometry(1.39, 48, 48);
+const atmoMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    void main() {
+      float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+      vec3 atmoColor = mix(vec3(0.0, 0.94, 1.0), vec3(0.2, 0.55, 1.0), intensity);
+      gl_FragColor = vec4(atmoColor, 1.0) * intensity * 2.4;
+    }
+  `,
+  side: THREE.BackSide,
+  blending: THREE.AdditiveBlending,
+  transparent: true
+});
+const atmoGlow = new THREE.Mesh(atmoGeo, atmoMat);
+planetGroup.add(atmoGlow);
+
+// Precision Keplerian Low Earth Orbit (LEO) Path
+const orbitGeo = new THREE.BufferGeometry();
+const orbitPts = [];
+for (let i = 0; i <= 120; i++) {
+  const th = (i / 120) * Math.PI * 2;
+  orbitPts.push(new THREE.Vector3(Math.cos(th) * 1.72, Math.sin(th) * 1.72, 0));
+}
+orbitGeo.setFromPoints(orbitPts);
+const orbitMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.4 });
+const orbitLine = new THREE.Line(orbitGeo, orbitMat);
+orbitLine.rotation.x = Math.PI / 3.2;
+planetGroup.add(orbitLine);
+
+// 3D Modeled Spacecraft / Satellite
+const satMasterGroup = new THREE.Group();
+
+// Avionics Bus
+const satBodyGeo = new THREE.BoxGeometry(0.08, 0.08, 0.12);
+const satBodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.95, roughness: 0.15 });
+const satBodyMesh = new THREE.Mesh(satBodyGeo, satBodyMat);
+satMasterGroup.add(satBodyMesh);
+
+// Solar Arrays (Gold Mylar / Photovoltaic Panels)
+const solarPanelGeo = new THREE.BoxGeometry(0.28, 0.09, 0.006);
+const solarPanelMat = new THREE.MeshStandardMaterial({ color: 0xffb700, metalness: 0.9, roughness: 0.2 });
+const solarMesh = new THREE.Mesh(solarPanelGeo, solarPanelMat);
+satMasterGroup.add(solarMesh);
+
+// High-Gain Parabolic Telemetry Dish
+const dishGeo = new THREE.ConeGeometry(0.045, 0.04, 16, 1, true);
+const dishMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true });
+const dishMesh = new THREE.Mesh(dishGeo, dishMat);
+dishMesh.rotation.x = Math.PI / 2;
+dishMesh.position.z = 0.07;
+satMasterGroup.add(dishMesh);
+
+planetGroup.add(satMasterGroup);
+
+// Ground Uplink Laser Beam (Sulur Ground Station -> Satellite)
+const uplinkGeo = new THREE.BufferGeometry();
+const uplinkPts = [
+  new THREE.Vector3(0.45, 0.58, 0.92), // Sulur geographic coordinates
+  new THREE.Vector3(0, 0, 0)
+];
+uplinkGeo.setFromPoints(uplinkPts);
+const uplinkMat = new THREE.LineDashedMaterial({
+  color: 0x00f0ff,
+  dashSize: 0.08,
+  gapSize: 0.04,
+  transparent: true,
+  opacity: 0.85
+});
+const uplinkBeam = new THREE.Line(uplinkGeo, uplinkMat);
+uplinkBeam.computeLineDistances();
+planetGroup.add(uplinkBeam);
+
+// Laser Data Packets (Pulsing particles travelling up the beam)
+const packetCount = 4;
+const packetGeo = new THREE.SphereGeometry(0.016, 8, 8);
+const packetMat = new THREE.MeshBasicMaterial({ color: 0xd4ff00 });
+const packetMeshes = [];
+for (let p = 0; p < packetCount; p++) {
+  const m = new THREE.Mesh(packetGeo, packetMat);
+  planetGroup.add(m);
+  packetMeshes.push(m);
+}
+
+/* ============================================================
+   MODE 02: GARGANTUA KERR BLACK HOLE (INTERSTELLAR QUALITY)
+============================================================ */
+const blackHoleGroup = new THREE.Group();
+blackHoleGroup.visible = false;
+celestialMaster.add(blackHoleGroup);
+
+// Absolute Schwarzschild Singularity Void (0% albedo)
+const singGeo = new THREE.SphereGeometry(0.88, 48, 48);
+const singMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const singularity = new THREE.Mesh(singGeo, singMat);
+blackHoleGroup.add(singularity);
+
+// Photon Sphere Thin Glow Rim
+const photonGeo = new THREE.SphereGeometry(0.92, 48, 48);
+const photonMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    void main() {
+      float intensity = pow(0.35 + dot(vNormal, vec3(0.0, 0.0, 1.0)), 4.0);
+      gl_FragColor = vec4(1.0, 0.9, 0.6, 1.0) * intensity * 2.0;
+    }
+  `,
+  blending: THREE.AdditiveBlending,
+  transparent: true
+});
+const photonSphere = new THREE.Mesh(photonGeo, photonMat);
+blackHoleGroup.add(photonSphere);
+
+// Relativistic Accretion Disk Texture with Doppler Beaming
+function createRelativisticAccretionTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024; canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+
+  // Radial Accretion Heat Bands
+  const radGrad = ctx.createRadialGradient(512, 512, 220, 512, 512, 500);
+  radGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  radGrad.addColorStop(0.06, 'rgba(255, 255, 255, 1)');      // Super-hot photon edge
+  radGrad.addColorStop(0.18, 'rgba(180, 240, 255, 0.95)');   // Doppler blue-shift core
+  radGrad.addColorStop(0.45, 'rgba(255, 160, 40, 0.85)');    // High energy ionization
+  radGrad.addColorStop(0.75, 'rgba(255, 50, 20, 0.5)');      // Outer cooler plasma
+  radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = radGrad;
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  // Infalling Relativistic Matter Filaments
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  for (let a = 0; a < 80; a++) {
+    const angle = (a / 80) * Math.PI * 2;
+    ctx.lineWidth = 1 + (a % 3);
+    ctx.beginPath();
+    ctx.arc(512, 512, 240 + (a % 12) * 20, angle, angle + 0.4);
+    ctx.stroke();
+  }
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+const accretionTexture = createRelativisticAccretionTexture();
+const accretionGeo = new THREE.RingGeometry(0.96, 2.5, 96);
+const accretionMat = new THREE.MeshBasicMaterial({
+  map: accretionTexture,
+  side: THREE.DoubleSide,
+  transparent: true,
+  blending: THREE.AdditiveBlending
+});
+const accretionDisk = new THREE.Mesh(accretionGeo, accretionMat);
+accretionDisk.rotation.x = Math.PI / 2.35;
+blackHoleGroup.add(accretionDisk);
+
+// Gravitational Lensing Arch (Light bent over the top of the horizon - Interstellar signature)
+const lensingArchGeo = new THREE.TorusGeometry(1.42, 0.024, 24, 120, Math.PI);
+const lensingArchMat = new THREE.MeshBasicMaterial({
+  color: 0xffeedd,
+  transparent: true,
+  opacity: 0.85,
+  blending: THREE.AdditiveBlending
+});
+const lensingArchUpper = new THREE.Mesh(lensingArchGeo, lensingArchMat);
+lensingArchUpper.rotation.x = Math.PI / 1.15;
+blackHoleGroup.add(lensingArchUpper);
+
+const lensingArchLower = lensingArchUpper.clone();
+lensingArchLower.rotation.x = -Math.PI / 1.15;
+blackHoleGroup.add(lensingArchLower);
+
+// Swirling Relativistic Particle Dust Cloud
+const bhDustCount = 1400;
+const bhDustGeo = new THREE.BufferGeometry();
+const bhDustPos = new Float32Array(bhDustCount * 3);
+const bhDustRadii = new Float32Array(bhDustCount);
+const bhDustAngles = new Float32Array(bhDustCount);
+const bhDustSpeeds = new Float32Array(bhDustCount);
+
+for (let d = 0; d < bhDustCount; d++) {
+  const r = 1.05 + Math.random() * 1.5;
+  const th = Math.random() * Math.PI * 2;
+  bhDustRadii[d] = r;
+  bhDustAngles[d] = th;
+  bhDustSpeeds[d] = 0.02 / Math.sqrt(r); // Keplerian orbital speed
+
+  bhDustPos[d * 3]     = Math.cos(th) * r;
+  bhDustPos[d * 3 + 1] = (Math.random() - 0.5) * 0.12;
+  bhDustPos[d * 3 + 2] = Math.sin(th) * r;
+}
+bhDustGeo.setAttribute('position', new THREE.BufferAttribute(bhDustPos, 3));
+const bhDustMat = new THREE.PointsMaterial({
+  color: 0x00f0ff,
+  size: 0.024,
+  transparent: true,
+  opacity: 0.75,
+  blending: THREE.AdditiveBlending
+});
+const bhDustPoints = new THREE.Points(bhDustGeo, bhDustMat);
+bhDustPoints.rotation.x = accretionDisk.rotation.x;
+blackHoleGroup.add(bhDustPoints);
+
+/* ============================================================
+   MODE 03: CARINA NEBULA & PROTO-STELLAR NURSERY (NO WIREFRAMES!)
+============================================================ */
+const nebulaGroup = new THREE.Group();
+nebulaGroup.visible = false;
+celestialMaster.add(nebulaGroup);
+
+// Central Luminous Young Stellar Core (Proto-Star)
+const protoGeo = new THREE.SphereGeometry(0.42, 32, 32);
+const protoMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const protoStar = new THREE.Mesh(protoGeo, protoMat);
+nebulaGroup.add(protoStar);
+
+// Corona Stellar Glow
+const coronaGeo = new THREE.SphereGeometry(0.72, 32, 32);
+const coronaMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    void main() {
+      float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.8);
+      gl_FragColor = vec4(0.9, 0.2, 1.0, 1.0) * intensity * 2.2;
+    }
+  `,
+  side: THREE.BackSide,
+  blending: THREE.AdditiveBlending,
+  transparent: true
+});
+const coronaMesh = new THREE.Mesh(coronaGeo, coronaMat);
+nebulaGroup.add(coronaMesh);
+
+// Volumetric Ionized Gas Particle Cloud (1,800 points)
+const nebCount = 1800;
+const nebGeo = new THREE.BufferGeometry();
+const nebPos = new Float32Array(nebCount * 3);
+const nebCols = new Float32Array(nebCount * 3);
+
+for (let i = 0; i < nebCount; i++) {
+  // Spiral nebula distribution
+  const arm = i % 3;
+  const armOffset = (arm * Math.PI * 2) / 3;
+  const dist = 0.5 + Math.pow(Math.random(), 1.5) * 2.2;
+  const angle = dist * 2.5 + armOffset + (Math.random() - 0.5) * 0.8;
+
+  nebPos[i * 3]     = Math.cos(angle) * dist;
+  nebPos[i * 3 + 1] = (Math.random() - 0.5) * 0.85 * (1.0 - dist * 0.3);
+  nebPos[i * 3 + 2] = Math.sin(angle) * dist;
+
+  // Multi-spectral ionized gas colors: Magenta (H-alpha), Indigo (OIII), Cyan
+  const rnd = Math.random();
+  if (rnd > 0.6) {
+    nebCols[i * 3] = 0.95; nebCols[i * 3 + 1] = 0.15; nebCols[i * 3 + 2] = 0.65; // Magenta
+  } else if (rnd > 0.3) {
+    nebCols[i * 3] = 0.0;  nebCols[i * 3 + 1] = 0.85; nebCols[i * 3 + 2] = 1.0;  // Cyan
+  } else {
+    nebCols[i * 3] = 0.45; nebCols[i * 3 + 1] = 0.15; nebCols[i * 3 + 2] = 0.95; // Indigo
+  }
+}
+nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos, 3));
+nebGeo.setAttribute('color', new THREE.BufferAttribute(nebCols, 3));
+
+const nebMat = new THREE.PointsMaterial({
+  size: 0.038,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.75,
+  blending: THREE.AdditiveBlending
+});
+const nebMesh = new THREE.Points(nebGeo, nebMat);
+nebulaGroup.add(nebMesh);
+
+/* ============================================================
+   INTERACTIVE ORBIT, MOUSE DAMPING & MODE SWITCHING
+============================================================ */
+let isDragging = false;
+let prevMouseX = 0, prevMouseY = 0;
+let targetRotX = 0.12, targetRotY = 0.45;
+let currentRotX = 0.12, currentRotY = 0.45;
+let cameraZoom = 4.6, targetZoom = 4.6;
+let pulseScale = 1.0;
+let timeWarp = 1.0;
+
+hero3DCanvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  prevMouseX = e.clientX; prevMouseY = e.clientY;
+  playBlip(1200, 'sine', 0.03);
+});
+window.addEventListener('mouseup', () => { isDragging = false; });
+window.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    const deltaX = e.clientX - prevMouseX;
+    const deltaY = e.clientY - prevMouseY;
+    targetRotY += deltaX * 0.007;
+    targetRotX += deltaY * 0.007;
+    prevMouseX = e.clientX; prevMouseY = e.clientY;
+  }
+});
+
+// Scroll to Zoom in Viewport
+hero3DCanvas.parentElement.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  targetZoom += e.deltaY * 0.0025;
+  targetZoom = Math.max(3.2, Math.min(6.5, targetZoom));
+}, { passive: false });
+
+// Click on Canvas triggers Quindar Audio Ping & Telemetry Ripple
+hero3DCanvas.addEventListener('click', () => {
+  pulseScale = 1.15;
+  playQuindarTone(true);
+
+  const pulseTag = document.getElementById('sculpture-pulse-tag');
+  if (pulseTag) {
+    pulseTag.textContent = '[UPLINK PING // DSN CARRIER COMMITTED]';
+    pulseTag.style.color = '#ffffff';
+    setTimeout(() => {
+      pulseTag.textContent = '[CLICK: ORBITAL TELEMETRY PING]';
+      pulseTag.style.color = 'var(--cyan)';
+    }, 1800);
+  }
+});
+
+// Mode Switcher Controls
+const presetBtns = document.querySelectorAll('.sculpture-preset-btn');
+const telemetryEl = document.getElementById('sculpture-telemetry');
+const hudCarrier = document.getElementById('hud-carrier');
+const hudSpeed = document.getElementById('hud-speed');
+const hudInc = document.getElementById('hud-inc');
+const hudGround = document.getElementById('hud-ground');
+
+presetBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    presetBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = btn.dataset.coreMode;
+
+    planetGroup.visible = (mode === 'planet');
+    blackHoleGroup.visible = (mode === 'blackhole');
+    nebulaGroup.visible = (mode === 'nebula');
+
+    pulseScale = 1.25;
+    playCosmicWarp();
+
+    if (mode === 'planet') {
+      if (telemetryEl) telemetryEl.textContent = 'TARGET: TERRA LEO // SULUR GROUND STATION [ONLINE] // ALT: 540 KM';
+      if (hudCarrier) hudCarrier.textContent = '8.41 GHz [X-BAND]';
+      if (hudSpeed) hudSpeed.textContent = '7.67 km/s';
+      if (hudInc) hudInc.textContent = '51.64° [LEO]';
+      if (hudGround) hudGround.textContent = 'SULUR 11.0°N / 76.9°E';
+    } else if (mode === 'blackhole') {
+      if (telemetryEl) telemetryEl.textContent = 'TARGET: KERR BLACK HOLE // EVENT HORIZON: 0.88 RS // GRAV REDSHIFT: 0.42';
+      if (hudCarrier) hudCarrier.textContent = 'HAWKING FLUX 1.42 GHz';
+      if (hudSpeed) hudSpeed.textContent = '0.94 c [RELATIVISTIC]';
+      if (hudInc) hudInc.textContent = 'KERR SPIN a = 0.998';
+      if (hudGround) hudGround.textContent = 'SCHWARZSCHILD RADIUS';
+    } else if (mode === 'nebula') {
+      if (telemetryEl) telemetryEl.textContent = 'TARGET: CARINA NEBULA NGC 3372 // STELLAR NURSERY // DIST: 7,500 LY';
+      if (hudCarrier) hudCarrier.textContent = 'H-ALPHA 656.3 nm';
+      if (hudSpeed) hudSpeed.textContent = 'EXPANSION 24.2 km/s';
+      if (hudInc) hudInc.textContent = 'IONIZED HII REGION';
+      if (hudGround) hudGround.textContent = 'YOUNG STELLAR OBJECTS';
+    }
+  });
+});
+
+/* ============================================================
+   ANIMATION LOOP
+============================================================ */
+let simClock = new THREE.Clock();
+
+function animateHero3D() {
+  const delta = simClock.getDelta();
+  const time = simClock.getElapsedTime();
+
+  // Smooth Damping for Rotation & Zoom
+  pulseScale += (1.0 - pulseScale) * 0.08;
+  cameraZoom += (targetZoom - cameraZoom) * 0.1;
+  heroCamera.position.z = cameraZoom;
+
+  if (!isDragging) {
+    targetRotY += 0.0035 * timeWarp;
+    targetRotX += Math.sin(time * 0.4) * 0.0006;
+  }
+
+  currentRotX += (targetRotX - currentRotX) * 0.07;
+  currentRotY += (targetRotY - currentRotY) * 0.07;
+
+  celestialMaster.rotation.x = currentRotX;
+  celestialMaster.rotation.y = currentRotY;
+
+  // 1. TERRA & SATELLITE DYNAMICS
+  if (planetGroup.visible) {
+    earthMesh.rotation.y += 0.0035;
+    cloudMesh.rotation.y += 0.0048; // Clouds move at atmospheric differential speed
+
+    // Orbital Satellite Mechanics (Keplerian motion)
+    const satAngle = time * 0.72;
+    const satRadius = 1.72;
+    const satX = Math.cos(satAngle) * satRadius;
+    const satY = Math.sin(satAngle) * satRadius;
+    satMasterGroup.position.set(satX, satY * Math.cos(Math.PI / 3.2), satY * Math.sin(Math.PI / 3.2));
+    satMasterGroup.rotation.z = satAngle + Math.PI / 2;
+
+    // Update Ground Uplink Laser Beam
+    const sulurPos = new THREE.Vector3(0.45, 0.58, 0.92);
+    const pts = [sulurPos, satMasterGroup.position];
+    uplinkGeo.setFromPoints(pts);
+
+    // Animate Data Packets flowing up to satellite
+    for (let p = 0; p < packetCount; p++) {
+      const prog = ((time * 1.4 + (p / packetCount)) % 1.0);
+      packetMeshes[p].position.lerpVectors(sulurPos, satMasterGroup.position, prog);
+    }
+  }
+
+  // 2. BLACK HOLE DYNAMICS
+  if (blackHoleGroup.visible) {
+    accretionDisk.rotation.z += 0.016;
+    lensingArchUpper.rotation.z -= 0.008;
+    lensingArchLower.rotation.z += 0.008;
+
+    // Swirl accretion dust in Keplerian speeds
+    const posArr = bhDustGeo.attributes.position.array;
+    for (let d = 0; d < bhDustCount; d++) {
+      bhDustAngles[d] += bhDustSpeeds[d];
+      const r = bhDustRadii[d];
+      const th = bhDustAngles[d];
+      posArr[d * 3]     = Math.cos(th) * r;
+      posArr[d * 3 + 2] = Math.sin(th) * r;
+    }
+    bhDustGeo.attributes.position.needsUpdate = true;
+  }
+
+  // 3. CARINA NEBULA DYNAMICS
+  if (nebulaGroup.visible) {
+    nebMesh.rotation.y += 0.0022;
+    nebMesh.rotation.z += 0.001;
+    coronaMesh.rotation.y -= 0.004;
+  }
+
+  // Responsive Canvas Resize
+  const width = hero3DCanvas.parentElement.clientWidth;
+  const height = hero3DCanvas.parentElement.clientHeight;
+  if (hero3DCanvas.width !== width || hero3DCanvas.height !== height) {
+    heroRenderer.setSize(width, height, false);
+    heroCamera.aspect = width / height;
+    heroCamera.updateProjectionMatrix();
+  }
+
+  heroRenderer.render(heroScene, heroCamera);
+  requestAnimationFrame(animateHero3D);
+}
+requestAnimationFrame(animateHero3D);
+
+
+// Resize listener
+window.addEventListener('resize', () => {
+  bgRenderer.setSize(window.innerWidth, window.innerHeight);
+  bgCamera.aspect = window.innerWidth / window.innerHeight;
+  bgCamera.updateProjectionMatrix();
+
+  const rect = hero3DCanvas.parentElement.getBoundingClientRect();
+  heroRenderer.setSize(rect.width, rect.height);
+  heroCamera.aspect = rect.width / rect.height;
+  heroCamera.updateProjectionMatrix();
+});
+
+/* ============================================================
+   6. 3D FLOATING PERSPECTIVE TILT ON PROJECT CARDS
+============================================================ */
+document.querySelectorAll('.tilt-3d-card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', x + 'px');
+    card.style.setProperty('--mouse-y', y + 'px');
+
+    const normX = (x / rect.width) - 0.5;
+    const normY = (y / rect.height) - 0.5;
+    const tiltX = -normY * 12;
+    const tiltY = normX * 12;
+
+    card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-8px) scale3d(1.02, 1.02, 1.02)`;
+  });
+
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)`;
+  });
+});
+
+/* ============================================================
+   7. INTERACTIVE PROJECT INSPECTION DRAWER DATA
+============================================================ */
+const projectSpecs = {
+  screenshot: {
+    title: "Smart Screenshot Organizer",
+    tag: "AUTOMATION ENGINE // PYTHON & TESSERACT OCR",
+    lead: "Background operating utility built to eliminate desktop fragmentation. Continuously monitors screenshot capture directories, invokes neural OCR parsing, applies regex taxonomy filters, and dispatches assets into structured destination categories.",
+    table: [
+      ["Runtime", "Python 3.10+ Daemon with OS FileSystem Hooks"],
+      ["OCR Engine", "Tesseract Optical Character Recognition v5.0"],
+      ["Efficiency Gain", "80% Reduction in manual visual sorting latency"],
+      ["Concurrency", "Multi-threaded async file event loop"],
+      ["Output Taxonomy", "Finance / Receipts, Code Snippets, UI/UX References, Documents"]
+    ],
+    code: `# Pipeline Logic: Background Event Hook & OCR Routing
+import pytesseract
+from PIL import Image
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+class ScreenshotHandler(FileSystemEventHandler):
+    def on_created(self, event):
+        if event.src_path.lower().endswith(('.png', '.jpg')):
+            extracted_text = pytesseract.image_to_string(Image.open(event.src_path))
+            target_directory = classify_content(extracted_text)
+            move_atomic(event.src_path, target_directory)
+            print(f"[DISPATCH] -> Categorized to {target_directory}")`
+  },
+  covid: {
+    title: "Covid-19 Intelligence Dashboard",
+    tag: "SPATIAL BIG DATA // POWER BI & QGIS CARTOGRAPHY",
+    lead: "Multi-layered epidemiological tracking tool combining regional dataset aggregation with GIS spatial boundaries. Designed to visualize regional immunization speed and demographic impact indicators across 100+ territories.",
+    table: [
+      ["Analytical Stack", "Microsoft Power BI, DAX Measures, QGIS"],
+      ["Coverage Scope", "100+ Regional Administrative Territories"],
+      ["Spatial Layer", "Custom geojson choropleth shapefile interpolation"],
+      ["Key Metrics", "Vaccination completion velocity, ICU threshold load"],
+      ["Update Cadence", "Batch timeseries integration"]
+    ],
+    code: `// DAX Measure Example: 7-Day Moving Immunization Acceleration
+MovingAvgVaccinationRate = 
+CALCULATE(
+    AVERAGE(VaccineLog[DailyDosesAdministered]),
+    DATESINPERIOD(
+        CalendarDate[Date],
+        LASTDATE(CalendarDate[Date]),
+        -7,
+        DAY
+    )
+)`
+  },
+  plantfix: {
+    title: "Plantfix: Botanical Care Platform",
+    tag: "HUMAN EXPERIENCE // FIGMA COMPONENT TOKENS",
+    lead: "Comprehensive mobile product prototype addressing horticultural maintenance friction. Built through iterative user journey mapping, high-fidelity design tokens, and rigorous usability testing across 15+ screens.",
+    table: [
+      ["Design System", "Atomic Component Tokens, Auto-Layout v4"],
+      ["Tested Screens", "15+ High-Fidelity Mobile Views"],
+      ["Key Flows", "Botanical identification, watering schedules, ailment diagnosis"],
+      ["User Testing", "Measured 35% faster task completion in usability cohorts"],
+      ["Figma Tokens", "Consistent typography hierarchy, WCAG AA color ratios"]
+    ],
+    code: `/* Plantfix Design Token Architecture */
+:root {
+  --botanical-primary: #2d6a4f;
+  --botanical-accent:  #52b788;
+  --hydration-alert:   #3a86ff;
+  --disease-warning:   #e63946;
+  --surface-radius:    16px;
+  --touch-target:      48px;
+}`
+  },
+  campity: {
+    title: "Campity: Campus Management Portal",
+    tag: "FULL STACK WEB // VANILLA JS & RESPONSIVE ARCHITECTURE",
+    lead: "High-uptime campus event portal centralized to streamline inter-club logistics and administrative notifications. Zero runtime framework bloat ensures instant mobile rendering for student bodies.",
+    table: [
+      ["Frontend Stack", "HTML5, CSS3 Custom Properties, Vanilla ES6+"],
+      ["Design Spec", "Mobile-first responsive fluid viewport scaling"],
+      ["Features", "Event synchronization, club directory, live bulletin board"],
+      ["Performance", "99/100 Google Lighthouse mobile speed score"],
+      ["Target Group", "Collegiate clubs, student councils, and department heads"]
+    ],
+    code: `// Event Dispatch Listener & Dynamic Notice Filter
+function filterEventsByDepartment(deptKey) {
+  const eventCards = document.querySelectorAll('.event-listing-card');
+  eventCards.forEach(card => {
+    const matches = card.dataset.dept === deptKey || deptKey === 'all';
+    card.classList.toggle('visible', matches);
+  });
+  console.log(\`[CAMPITY] Synchronized views for \${deptKey}\`);
+}`
+  },
+  billing: {
+    title: "Self-Operating Billing Engine",
+    tag: "TRANSACTION SYSTEMS // C & RELATIONAL SQL",
+    lead: "Embedded high-reliability financial engine designed for low-resource transaction handling. Engineered with explicit memory controls in C and ACID relational database normalization.",
+    table: [
+      ["Language Layer", "ISO C (C99 / C11)"],
+      ["Database Layer", "Relational SQL (PostgreSQL / SQLite schema)"],
+      ["Reliability", "Zero data loss under continuous simulated operations"],
+      ["Features", "Atomic ledger logging, audit verification, invoice indexing"],
+      ["Storage Format", "Binary file serialization backup with SQL sync"]
+    ],
+    code: `/* C Transaction Commit Pipeline */
+int commit_transaction(TransactionRecord* record, sqlite3* db) {
+    char* err_msg = NULL;
+    char sql_buf[256];
+    snprintf(sql_buf, sizeof(sql_buf),
+             "INSERT INTO Ledger (acc_id, amount, timestamp) VALUES (%d, %.2f, %ld);",
+             record->account_id, record->amount, time(NULL));
+    int rc = sqlite3_exec(db, sql_buf, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        log_audit_error(err_msg);
+        return 0; // Rollback
+    }
+    return 1; // Committed with 0% data loss
+}`
+  },
+  starlit: {
+    title: "Level 1 Factory Gate Entry Automation",
+    tag: "INDUSTRIAL AUTOMATION // HARDWARE & LEVEL 1 CONTROL",
+    lead: "Commissioned for Starlit Steel Building Solutions (Gopichettipalayam, TN). Completely replaced error-prone paper logbooks with automated personnel credential verification and digital audit timestamps.",
+    table: [
+      ["Industrial Level", "Level 1 Automation (Sensor & Hardware Access Layer)"],
+      ["Processing Gain", "40% average reduction in worker check-in latency"],
+      ["Data Integrity", "100% audit accuracy for safety and management compliance"],
+      ["Implementation", "4 weeks from initial assessment to production deployment"],
+      ["Documentation", "Complete SOP guidelines and non-technical staff training"]
+    ],
+    code: `// Level 1 Automation Verification Flowchart:
+// [Personnel arrives] -> [ID Scan / Sensor Protocol]
+//       |
+// [Hardware Controller Level 1] -> [Validate Credentials against Database]
+//       |
+//  (If Verified) -> [Trigger Barrier Relay (OPEN)] -> [Log Millisecond Timestamp]
+//  (If Rejected) -> [Trigger Alert Warning] -> [Flag Supervisor Panel]`
+  }
+};
+
+const drawer = document.getElementById('project-drawer');
+const drawerMeta = document.getElementById('drawer-meta');
+const drawerBody = document.getElementById('drawer-body');
+const drawerClose = document.getElementById('drawer-close');
+
+function openDrawer(key) {
+  const spec = projectSpecs[key];
+  if (!spec) return;
+
+  drawerMeta.textContent = `// SPECIFICATION: ${spec.tag}`;
+  let tableRows = spec.table.map(r => `<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('');
+
+  drawerBody.innerHTML = `
+    <h1 class="drawer-h1">${spec.title}</h1>
+    <p class="drawer-lead">${spec.lead}</p>
+    <div class="drawer-section-h2">TECHNICAL SPECIFICATIONS &amp; BENCHMARKS</div>
+    <table class="drawer-spec-table">${tableRows}</table>
+    <div class="drawer-section-h2">CORE IMPLEMENTATION ARCHITECTURE</div>
+    <pre class="code-preview-box"><code>${escapeHtml(spec.code)}</code></pre>
+  `;
+
+  drawer.classList.add('active');
+  playDrawerSound(true);
+}
+
+function closeDrawer() {
+  drawer.classList.remove('active');
+  playDrawerSound(false);
+}
+
+document.querySelectorAll('.tilt-3d-card').forEach(c => {
+  c.addEventListener('click', () => {
+    const key = c.dataset.project;
+    openDrawer(key);
+  });
+});
+
+drawerClose.addEventListener('click', closeDrawer);
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeDrawer();
+});
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ============================================================
+   8. SKILL BARS ON-SCROLL REVEAL
+============================================================ */
+const skillObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.prog-fill-inner').forEach(bar => {
+        const w = bar.dataset.width;
+        bar.style.width = w + '%';
+      });
+    }
+  });
+}, { threshold: 0.25 });
+
+document.querySelectorAll('.skill-card-block').forEach(b => skillObserver.observe(b));
+
+// Matrix navigation clicks
+document.querySelectorAll('.matrix-menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.matrix-menu-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    const targetId = item.dataset.target;
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    playBlip(850, 'triangle', 0.04);
+  });
+});
+
+/* ============================================================
+   9. KPI COUNTER ANIMATION
+============================================================ */
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('[data-counter]').forEach(counter => {
+        const targetVal = parseFloat(counter.dataset.counter);
+        const suffix = counter.dataset.suffix || '';
+        const isDecimal = targetVal % 1 !== 0;
+        let start = 0;
+        const duration = 1800;
+        const startTime = performance.now();
+
+        function updateCount(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          const currentVal = ease * targetVal;
+          counter.textContent = (isDecimal ? currentVal.toFixed(2) : Math.round(currentVal)) + suffix;
+          if (progress < 1) requestAnimationFrame(updateCount);
+        }
+        requestAnimationFrame(updateCount);
+      });
+      counterObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.hero-kpis').forEach(k => counterObserver.observe(k));
+
+/* ============================================================
+   10. INTERACTIVE DEVELOPER TERMINAL HUD (CLI)
+============================================================ */
+const termHud = document.getElementById('terminal-hud');
+const termToggle = document.getElementById('term-toggle');
+const termClose = document.getElementById('term-close');
+const termInput = document.getElementById('term-input');
+const termScreen = document.getElementById('term-screen');
+
+termToggle.addEventListener('click', () => {
+  termHud.classList.toggle('open');
+  if (termHud.classList.contains('open')) {
+    termInput.focus();
+    playTerminalPowerSound(true);
+  } else {
+    playTerminalPowerSound(false);
+  }
+});
+termClose.addEventListener('click', () => {
+  termHud.classList.remove('open');
+  playTerminalPowerSound(false);
+});
+
+const terminalCommands = {
+  help: "Available commands:\n- whoami       : Profile overview & focus\n- space        : Space & cosmic computing interest\n- pulsar       : Astrophysics neutron core specs\n- blackhole    : Singularity & accretion disk\n- orbit        : Keplerian orbital mechanics\n- cgpa         : Academic metric verification\n- skills       : Technical proficiency audit\n- projects     : Catalog of engineered payloads\n- starlit      : Industrial Automation case\n- contact      : Direct comms endpoints\n- clear        : Wipe console screen\n- exit         : Close terminal HUD",
+  whoami: "Naveen S | BE Computer Science & Engineering (Class of 2028)\nKPR Institute of Technology, Coimbatore.\nInterests: Space Computing, Astrophysics, Industrial Automation (Level 1), C, Python, SQL.",
+  space: "DEEP SPACE COMPUTING:\nFascinated by high-reliability software designed for extreme cosmic environments—from radiation-hardened satellite computing to autonomous rover navigation and real-time planetary telemetry.",
+  pulsar: "PULSAR TELEMETRY (PSR J1748-2446ad):\nRapidly spinning neutron stars with magnetic fields of 10^8 Tesla, producing deterministic periodic radio beams utilized as cosmic galactic clocks.",
+  blackhole: "EVENT HORIZON & GRAVITATIONAL LENSING:\nSimulating gravitational warping where escape velocity equals c. Accretion disk exhibits Doppler blueshifting on approaching trajectories.",
+  orbit: "KEPLER'S LAWS & ORBITAL DYNAMICS:\n1. Planetary orbits are ellipses with the Sun at one focus.\n2. Radius vectors sweep equal areas in equal time.\n3. T^2 proportional to a^3. Applied in satellite insertion algorithms.",
+  cgpa: "CGPA: 9.05 / 10.00\nStatus: Ranked in top performance cohort tier at KPR Institute.",
+  skills: "Technical Arsenal:\n- C (Systems Programming 92%)\n- Python (Data & OCR 84%)\n- SQL & Postgres (82%)\n- Power BI & QGIS Spatial (80%)\n- Figma UI/UX (82%)\n- Level 1 Industrial Automation",
+  projects: "Engineered Missions & Payloads:\n1. Smart Screenshot Organizer (Tesseract OCR Python)\n2. Covid-19 Spatial Intelligence (QGIS / Power BI)\n3. Plantfix Botanical Care Platform (Figma UX)\n4. Campity Campus Network (Vanilla DOM)\n5. Self-Operating Billing Engine (C/SQL 0% Loss)\n6. Factory Gate Automation (Starlit Steel)",
+  starlit: "Starlit Steel Solutions Gate Entry Automation:\n- Replaced manual logbooks with L1 computerized verification\n- 40% Transit bottleneck reduction\n- 100% Data accuracy compliance",
+  contact: "Ground Station Endpoints:\n- Email: navens.officials@gmail.com\n- Phone: +91 99527 47859\n- LinkedIn: linkedin.com/in/naveen-s-a5bb17328",
+  clear: "CLEAR_SCREEN",
+  exit: "EXIT_TERM"
+};
+
+termInput.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') {
+    playTerminalKeystroke();
+  }
+
+  if (e.key === 'Enter') {
+    const rawVal = termInput.value.trim().toLowerCase();
+    termInput.value = '';
+    if (!rawVal) return;
+
+    const line = document.createElement('div');
+    line.innerHTML = `<span style="color:var(--lime);">naveen@portfolio:~$</span> ${escapeHtml(rawVal)}`;
+    termScreen.appendChild(line);
+
+    if (rawVal === 'clear') {
+      termScreen.innerHTML = '';
+      playCommandSound(true);
+      return;
+    }
+    if (rawVal === 'exit') {
+      termHud.classList.remove('open');
+      playTerminalPowerSound(false);
+      return;
+    }
+
+    const isRecognized = Boolean(terminalCommands[rawVal]);
+    playCommandSound(isRecognized);
+
+    const response = terminalCommands[rawVal] || `Command not found: '${escapeHtml(rawVal)}'. Type 'help' for manual.`;
+    const responseLine = document.createElement('div');
+    responseLine.style.color = isRecognized ? '#a5a5b5' : 'var(--crimson)';
+    responseLine.style.whiteSpace = 'pre-wrap';
+    responseLine.style.marginBottom = '0.75rem';
+    responseLine.textContent = response;
+    termScreen.appendChild(responseLine);
+
+    termScreen.scrollTop = termScreen.scrollHeight;
+  } else if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete') {
+    playKeyClack(e.key === 'Backspace' || e.key === 'Delete');
+  }
+});
+
+/* ============================================================
+   11. TRANSMISSION FORM SUBMISSION
+============================================================ */
+function handleFormSubmit(e) {
+  e.preventDefault();
+  playBlip(1200, 'triangle', 0.12);
+  alert("TRANSMISSION ACKNOWLEDGED.\nThank you! Your message has been logged. Naveen S will reply within 24 hours.");
+  e.target.reset();
+}
+
+console.log('%c NAVEEN S // RESILIENT SYSTEMS PORTFOLIO READY ', 'background:#d4ff00; color:#09090b; font-weight:800; font-size:14px; padding:4px 10px;');
+</script>
+</body>
+</html>
